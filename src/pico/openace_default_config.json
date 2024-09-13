@@ -1,0 +1,169 @@
+{
+    "_comment_signature": "A signature used to decide if the JSON loaded, even when it was correct that it was an OpenACE configuration",
+    "signature": 4321,
+    "_comment_hardware": "Hardware configuration used.",
+    "hardware": "PICO_2RADIO",
+    "config": {
+        "pilotname": "OpenACE",
+        "aircraftId": "XX-XXX"
+    },
+    "_comment_modules": "All modules that will be loaded when OpenACE starts up",
+    "modules": "Ogn1,Flarm,GDLoverUDP,Gdl90Service,Dump1090Client,Bmp280,ADSL,_SerialADSB,Sx1262_1,Sx1262_0,WifiClient,GpsDecoder,ADSBDecoder,RadioTunerRx,RadioTunerTx",
+    "aircraft": {
+        "_comment": "All aircrafts and their configurations settings, config::aircraftId will be used to setup the hardware and load the configuration for that aircraft",
+        "XX-XXX": {
+            "callSign": "XX-XXX",
+            "address": 0,
+            "addressType": "ADSL",
+            "category": "ReciprocatingEngine",
+            "privacy": 1,
+            "noTrack": 1,
+            "protocols": [
+                "OGN",
+                "ADSL",
+                "FLARM"
+            ]
+        }
+    },
+    "ADSBDecoder": {
+        "filterAbove": 1500,
+        "filterBelow": 1500
+    },
+    "AceSpi": {
+        "port": "port1"
+    },
+    "WifiService": {
+        "_comment_client": "The standard SSD and password when OpenACE is in Access Point mode",
+        "ap": {
+            "ssid": "OpenACE",
+            "password": "12345678"
+        },
+        "_comment_ap": "A list of Access Points OpenACE will be trying to to connect to.",
+        "clients": [
+            {
+                "ssid": "Your Device",
+                "password": "Your Password"
+            }
+        ]
+    },
+    "Bmp280": {
+        "port": "porta",
+        "compensation": 0
+    },
+    "Sx1262_0": {
+        "port": "port8",
+        "txEnabled": 1,
+        "offset": 0
+    },
+    "Flarm": {
+        "distanceIgnore": 25000
+    },
+    "Ogn1": {
+        "distanceIgnore": 25000
+    },
+    "ADSL": {
+        "distanceIgnore": 25000
+    },
+    "Sx1262_1": {
+        "port": "port9",
+        "txEnabled": 1,
+        "offset": 0
+    },
+    "Dump1090Client": {
+        "ip": "192.168.178.105",
+        "port": 30002
+    },
+    "GDLoverUDP": {
+        "defaultPorts": [
+            4000
+        ],
+        "ips": [
+            {
+                "ip": "192.168.178.192",
+                "port": 4000
+            },
+            {
+                "ip": "192.168.178.191",
+                "port": 4000
+            }
+        ]
+    },
+    "UbloxM8N": {
+        "port": "port2"
+    },
+    "SerialADSB": {
+        "port": "port3"
+    },
+    "PICO_2RADIO": {
+        "port1": {
+            "clk": 2,
+            "mosi": 3,
+            "miso": 4,
+            "rst": 5
+        },
+        "port2": {
+            "tx": 0,
+            "rx": 1,
+            "busy": 18,
+            "n": 0
+        },
+        "port3": {
+            "tx": 16,
+            "rx": 17,
+            "busy": 27,
+            "n": 1
+        },
+        "port4": {
+            "cs": 6
+        },
+        "port5": {
+            "O0": 26
+        },
+        "port6": {
+            "O0": 7
+        },
+        "port7": {
+            "cs": 8,
+            "busy": 9,
+            "tx": 8,
+            "rx": 9,
+            "p0": 8,
+            "p1": 9
+        },
+        "port8": {
+            "cs": 22,
+            "busy": 11,
+            "dio1": 10,
+            "p0": 10,
+            "p1": 11,
+            "p2": 22
+        },
+        "port9": {
+            "cs": 12,
+            "busy": 13,
+            "dio1": 19,
+            "tx": 12,
+            "rx": 13,
+            "p0": 12,
+            "p1": 13,
+            "p2": 19
+        },
+        "porta": {
+            "cs": 14,
+            "busy": 15,
+            "p0": 14,
+            "p1": 15
+        },
+        "portb": {
+            "cs": 20,
+            "busy": 21,
+            "rx": 21,
+            "tx": 20,
+            "p0": 20,
+            "p1": 21
+        },
+        "portc": {
+            "ad0": 28
+        }
+    }
+}
