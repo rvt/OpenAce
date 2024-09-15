@@ -33,11 +33,13 @@
 #define PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE CYW43_COUNTRY_WORLDWIDE
 #define CYW43_HOST_NAME "OpenAce"
 
+// https://github.com/raspberrypi/pico-sdk/issues/1443
+#define PICO_MAX_SHARED_IRQ_HANDLERS 6
 
 
 // START: ***** Debugging PICO items
 // https://github.com/raspberrypi/pico-sdk/blob/master/src/boards/include/boards/pico_w.h
-// #if !defined( NDEBUG )
+#ifndef NDEBUG
 #define PICO_DEOPTIMIZED_DEBUG ( 1 )
 #define PICO_DEBUG_MALLOC ( 1 )
 #define PICO_USE_MALLOC_MUTEX ( 1 )
@@ -51,21 +53,17 @@
 // Other's that could help debugging problems
 // #define HTTPD_DEBUG LWIP_DBG_ON
 // #define RUN_FREERTOS_ON_CORE ( 1 )
-//#endif
-
+#endif
 // END: ***** Debugging PICO items
 
-// https://github.com/raspberrypi/pico-sdk/issues/1443
-#define PICO_MAX_SHARED_IRQ_HANDLERS 6
 
-// USB_UART: Enable this
-// When set, UART output is redirected over RX/TX 2
-// Accidentally, this is also the ADSB Port
-//#define PICO_DEFAULT_UART 1
-
-// USB_UART: disable these two
-#define PICO_DEFAULT_UART_RX_PIN  17
-#define PICO_DEFAULT_UART_TX_PIN  16
+// Route UART messages over different pins by default
+#if OPENACE_UART_OVER_USB
+    #define PICO_DEFAULT_UART 1
+#else
+    #define PICO_DEFAULT_UART_RX_PIN  17
+    #define PICO_DEFAULT_UART_TX_PIN  16
+#endif
 
 // DHCP lease time. 30 minutes TO ensure we remove unneeded targets on time. But long enough to ensure we do not loose connection
 #define OPENACE_DEFAULT_LEASE_TIME_S ( 60 * 30 )

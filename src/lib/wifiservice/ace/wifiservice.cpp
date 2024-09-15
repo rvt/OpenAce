@@ -82,7 +82,7 @@ void WifiService::wifiTask(void *arg)
                 break;
 
             case ConnectionState::TRYCLIENTCONNECT:
-                // wifi_leave seems to be needed for more reliable connections, I don't know why...
+                // wifi_leave seems to be required for more reliable connections, I don't know why...
                 cyw43_wifi_leave(&cyw43_state, 0);
                 {
                     auto cResult = wifiService->connectClient();
@@ -226,14 +226,16 @@ void WifiService::startWifiScan()
  * Try to connect to a cluent
  * returns
  *  0 Connection OK
- *  1 Connection failed
+ *  1 No Connection
  */
 uint8_t WifiService::connectClient()
 {
-    static uint8_t connectionAttempt = 1;
+    const uint8_t NUMBER_OF_CONNECTION_ATTEMPTS = 3;
+    // Keeps track of the number of connections to the same network
+    static uint8_t connectionAttempt = 1; 
     if (scanResult.empty())
     {
-        return false;
+        return 1;
     }
 
     auto nameIt = scanResult.begin();
@@ -243,10 +245,11 @@ uint8_t WifiService::connectClient()
         return client.ssid == *nameIt;
     });
 
+    // Was this one found?
     if (it == wifiData.clients.end())
     {
         scanResult.erase(nameIt);
-        return false;
+        return 1;
     }
 
     //    printf("WifiService: Connecting %s %s\n", it->ssid.c_str(), "<hidden>");
@@ -259,9 +262,10 @@ uint8_t WifiService::connectClient()
         connectionAttempt = 0;
         showSsidPwdIp(it->ssid, "<hidden>", false);
         return 0;
+
     //    case PICO_ERROR_TIMEOUT:      // Timeout might mean that the network is just lost
-    case PICO_ERROR_CONNECT_FAILED: // Seems to indicate that thet network is their, but somehow could not connect
-        if (connectionAttempt < 3)
+    case PICO_ERROR_CONNECT_FAILED: // Seems to indicate that the network is available, but somehow could not connect
+        if (connectionAttempt < NUMBER_OF_CONNECTION_ATTEMPTS)
         {
             connectionAttempt++;
             return 1;
@@ -270,7 +274,7 @@ uint8_t WifiService::connectClient()
     default:
         connectionAttempt = 0;
         scanResult.erase(nameIt);
-        return 2;
+        return 1;
     }
 }
 

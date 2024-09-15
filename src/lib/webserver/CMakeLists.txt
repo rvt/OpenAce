@@ -3,16 +3,6 @@ cmake_minimum_required(VERSION 3.5.0)
 set(MSG_PREFIX "Webserver |")
 project(webserver VERSION 0.0.0 LANGUAGES CXX)
 
-set(MAKE_FS_DATA_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/external/makefsdata)
-message("## Makefsdata ${CMAKE_CURRENT_LIST_DIR}/../../../SystemGUI/dist")
-execute_process(COMMAND
-        perl ${MAKE_FS_DATA_SCRIPT}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../SystemGUI/dist
-        ECHO_OUTPUT_VARIABLE
-        ECHO_ERROR_VARIABLE
-        )
-# file(RENAME ${CMAKE_CURRENT_LIST_DIR}/../../SystemGUI/dist/fsdata.c ${CMAKE_CURRENT_LIST_DIR}/openace_fsdata.c)
-
 option(BUILD_TESTS "Build unit tests" OFF)
 option(NO_STL "No STL" OFF)
 

@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.13...3.27)
 
-find_package(Perl)
-if(NOT PERL_FOUND)
-  message(FATAL_ERROR "Perl is needed for generating the fsdata.c file")
-endif()
-
 set(OPTMIZE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/external/optimizejson.py
                    openace_default_config.json default_config.hpp)
 execute_process(
@@ -28,6 +23,9 @@ project(OpenACE C CXX ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+
+# Enable this to use picotool, and bebale to receive UART data over picotool
+set(OPENACE_UART_OVER_USB 0)
 
 add_compile_options(-Wall -fsingle-precision-constant -ffast-math)
 add_link_options(-Wl,--print-memory-usage)
@@ -83,12 +81,17 @@ target_link_libraries(${PROJECT_NAME}
           )
 
 target_compile_definitions(OpenACE PRIVATE FREE_RTOS_KERNEL_SMP=1
-                                           portSUPPORT_SMP=1)
+                                           portSUPPORT_SMP=1 OPENACE_UART_OVER_USB=${OPENACE_UART_OVER_USB})
 
-# Disable USB, enable UART
-# USB_UART: Set to 1
-pico_enable_stdio_usb(OpenACE 0)
-pico_enable_stdio_uart(OpenACE 1)
+# Enable debugging over PICO Debugger
+if (OPENACE_UART_OVER_USB)
+    pico_enable_stdio_usb(OpenACE 1)
+    pico_enable_stdio_uart(OpenACE 0)
+else()
+    pico_enable_stdio_usb(OpenACE 0)
+    pico_enable_stdio_uart(OpenACE 1)
+endif()
+
 
 # create map/bin/hex/uf2 file in addition to ELF. -> rp2_common.cmake
 pico_add_extra_outputs(OpenACE)
