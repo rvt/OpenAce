@@ -1,3 +1,6 @@
 [submodule "src/vendor/ArduinoJson"]
 	path = src/vendor/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson
+[submodule "src/vendor/etl"]
+	path = src/vendor/etl
+	url = https://github.com/ETLCPP/etl
