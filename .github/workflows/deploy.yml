@@ -1,12 +1,12 @@
 name: Build OpenAce
 
 on:
-  #  schedule:
-  #    - cron: '0 1 * * *'
+  schedule:
+    - cron: '0 1 * * *'
   workflow_dispatch:
   push:
     branches:
-      - 'workflow'
+      - *
 
 jobs:
   build:
