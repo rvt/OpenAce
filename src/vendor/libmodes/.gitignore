@@ -1,0 +1,5 @@
+*.o
+tests/fixtures
+tests/test
+tests/results
+*.iml

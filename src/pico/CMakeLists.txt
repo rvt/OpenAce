@@ -16,10 +16,10 @@ set(PICO_BOARD pico_w)
 
 # pico_sdk_import.cmake is a single file copied from this SDK note: this must
 # happen before project() include(cmake/pico_sdk_import.cmake)
-include(/opt/pico/pico-sdk/pico_sdk_init.cmake)
+include ($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 include(cmake/FreeRTOS_Kernel_import.cmake)
 
-project(OpenACE C CXX ASM)
+project(OpenAce C CXX ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -38,7 +38,7 @@ add_executable(${PROJECT_NAME} main.h main.cpp IdleMemory.c)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../vendor vendorLib)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib globalLib)
 
-target_include_directories(OpenACE PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(OpenAce PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(${PROJECT_NAME} 
   PRIVATE FreeRTOS-Kernel-Heap4
@@ -80,18 +80,18 @@ target_link_libraries(${PROJECT_NAME}
           aircrafttracker
           )
 
-target_compile_definitions(OpenACE PRIVATE FREE_RTOS_KERNEL_SMP=1
+target_compile_definitions(OpenAce PRIVATE FREE_RTOS_KERNEL_SMP=1
                                            portSUPPORT_SMP=1 OPENACE_UART_OVER_USB=${OPENACE_UART_OVER_USB})
 
 # Enable debugging over PICO Debugger
 if (OPENACE_UART_OVER_USB)
-    pico_enable_stdio_usb(OpenACE 1)
-    pico_enable_stdio_uart(OpenACE 0)
+    pico_enable_stdio_usb(OpenAce 1)
+    pico_enable_stdio_uart(OpenAce 0)
 else()
-    pico_enable_stdio_usb(OpenACE 0)
-    pico_enable_stdio_uart(OpenACE 1)
+    pico_enable_stdio_usb(OpenAce 0)
+    pico_enable_stdio_uart(OpenAce 1)
 endif()
 
 
 # create map/bin/hex/uf2 file in addition to ELF. -> rp2_common.cmake
-pico_add_extra_outputs(OpenACE)
+pico_add_extra_outputs(OpenAce)

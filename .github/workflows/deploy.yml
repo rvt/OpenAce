@@ -1,0 +1,100 @@
+name: Build OpenAce
+
+on:
+  #  schedule:
+  #    - cron: '0 1 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - 'workflow'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clean workspace
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+          mkdir -p "${{ github.workspace }}"
+
+      - name: Install tree
+        run: |
+          sudo apt-get install tree
+
+      - name: Checkout OpenAce
+        uses: actions/checkout@v4
+        with:
+          path: OpenAce
+          ref: workflow
+          submodules: true
+
+      - name: Checkout pico-sdk/develop
+        uses: actions/checkout@v4
+        with:
+          repository: raspberrypi/pico-sdk
+          ref: develop
+          path: pico-sdk
+          submodules: true
+
+      - name: Checkout FreeRTOS/main
+        uses: actions/checkout@v4
+        with:
+          repository: FreeRTOS/FreeRTOS
+          ref: main
+          path: FreeRTOS
+          submodules: true
+
+      - name: Tree
+        run: |
+          echo "${{github.workspace}}"
+          tree ${{github.workspace}} -d -L 2
+      - name: Install Dependencies
+        run: |
+          sudo apt install -y git python3 ninja-build cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib libusb-dev
+#      - name: Install dependencies
+#        run: |
+#          echo pwd
+#          ls -l
+#          sudo apt-get install cmake ninja-build
+#          # install gcc cross-compile for ARM v 13.3.1
+#          curl -Lo gcc-arm-none-eabi.tar.xz "https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz"
+#          sudo mkdir /opt/gcc-arm-none-eabi
+#          sudo tar xf gcc-arm-none-eabi.tar.xz --strip-components=1 -C /opt/gcc-arm-none-eabi
+#          echo 'export PATH=$PATH:/opt/gcc-arm-none-eabi/bin' | sudo tee -a /etc/profile.d/gcc-arm-none-eabi.sh
+#          export PATH=$PATH:/opt/gcc-arm-none-eabi/bin
+#          export PICO_TOOLCHAIN_PATH=/opt/gcc-arm-none-eabi/bin
+#          export PICO_SDK_PATH=/opt/pico-sdk/
+#          export FREERTOS_KERNEL_PATH=/opt/FreeRTOS/FreeRTOS/Source
+#
+#          source /etc/profile
+#          ls -lrta /opt/gcc-arm-none-eabi/bin9
+#          arm-none-eabi-c++ --version
+#
+#          # sudo apt install gcc-arm-none-eabi
+#          # whereis arm-none-eabi-gcc
+#          # ls -lrta /usr/bin/arm-none-eabi-gcc
+#          # /usr/bin/arm-none-eabi-gcc --version
+
+      - name: Build Project
+        working-directory: ${{github.workspace}}/OpenAce
+        # bash required otherwise this mysteriously (no error) fails at "Generating cyw43_bus_pio_spi.pio.h"
+#          cmake .. -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_C_COMPILER:FILEPATH=/opt/gcc-arm-none-eabi/bin/arm-none-eabi-gcc -DCMAKE_CXX_COMPILER:FILEPATH=/opt/gcc-arm-none-eabi/bin/arm-none-eabi-g++ -DPICO_TOOLCHAIN_PATH=/opt/gcc-arm-none-eabi/bin -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico
+        shell: bash
+        run: |
+          export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk/
+          export FREERTOS_KERNEL_PATH=$GITHUB_WORKSPACE/FreeRTOS/FreeRTOS/Source/
+          export
+          tree -d -L 2
+          cd src/pico
+          echo ${{ github.ref }}
+          cmake -B build -G Ninja && ninja -C build $1
+          ls -lrt build/*.uf2
+
+
+#      - name: Deploy Nightly Development Release
+#        uses: pyTooling/Actions/releaser@r0
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          tag: nightly_development
+#          files: /home/runner/work/pico_gps_teseo/pico_gps_teseo/pico_gps_teseo/build/pico_gps_teseo_*.uf2

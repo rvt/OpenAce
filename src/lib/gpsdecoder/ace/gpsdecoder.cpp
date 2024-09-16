@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "GpsDecoder.hpp"
+#include "gpsdecoder.hpp"
 #include "ace/moreutils.hpp"
 
 OpenAce::PostConstruct GpsDecoder::postConstruct()
