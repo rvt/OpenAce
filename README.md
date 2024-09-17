@@ -1,6 +1,10 @@
 # OpenAce Conspicuity Device
 
-> **_NOTE:_**: I am in the process of uploading the necessary files to GitHub. More will be added soon, including the OpenSCAD case, KiCAD PCB files, unit tests for the source code, and additional resources.
+> **_NOTE:_**: 
+> I am in the process of uploading the necessary files to GitHub. More will be added soon, including the OpenSCAD case, KiCAD PCB files, unit tests for the source code, and additional resources.
+
+> [!TIP]
+> Please visit the [OpenAce WIKI](https://github.com/rvt/OpenAce/wiki) for build information.
 
 The OpenAce Conspicuity device is designed for General Aviation pilots flying in areas where multiple protocols, such as OGN, Flarm, and ADS-L, are used. It can transmit and receive multiple protocols simultaneously (excluding sending ADS-B) using one or more transceiver modules. All received traffic is sent to your Electronic Flight Bag (EFB), such as SkyDemon, via the GLD90 protocol.
 
