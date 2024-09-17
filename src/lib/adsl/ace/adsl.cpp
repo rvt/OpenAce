@@ -277,10 +277,9 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
         return -1;
     }
 
-    // printf("received ts:%d\n", packet.timeStamp);
-
-    char icaoAddress[7];
-    sprintf(icaoAddress, "%.6X", packet.address);
+    OpenAce::IcaoAddress icaoAddress;
+    etl::string_stream stream(icaoAddress);
+    stream << etl::hex << packet.address;
 
     OpenAce::AircraftPositionMsg aircraftPosition
     {
