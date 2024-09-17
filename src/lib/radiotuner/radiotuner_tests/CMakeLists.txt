@@ -34,7 +34,7 @@ set( SOURCES_IDIOMATIC_EXAMPLES
    
    # Tests
    countryregulations_test.cpp
-#   radiotunerrx_test.cpp
+   radiotunerrx_test.cpp
 )
 
 string( REPLACE ".cpp" "" BASENAMES_IDIOMATIC_EXAMPLES "${SOURCES_IDIOMATIC_EXAMPLES}" )
@@ -45,11 +45,12 @@ set( ACE_SOURCE_FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/core/ace/basemodule.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/core/ace/constants.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/core/ace/coreutils.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/core/ace/models.cpp
 
 #      ${CMAKE_CURRENT_SOURCE_DIR}/mocks/pico/time.c
 
      ../ace/countryregulations.cpp
-#     ../ace/radiotunerrx.cpp
+     ../ace/radiotunerrx.cpp
 )
 
 

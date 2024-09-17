@@ -23,10 +23,9 @@ TEST_CASE("RadioProtocolCtx", "[single-file]")
     ctx.prioritizeDatasources();
     REQUIRE(etl::vector<OpenAce::DataSource, 1> {} == ctx.dataSourceTimeSlots);
 
-    SECTION("Prioritice should not crash", "[single-file]")
+    SECTION("Prioritise should return 500ms on default zone", "[single-file]")
     {
-        ctx.advanceReceiveSlot(CountryRegulations::ZONE0);
-        REQUIRE(*ctx.upcomingDataSource == OpenAce::DataSource::FLARM);
+        REQUIRE( ctx.advanceReceiveSlot(CountryRegulations::ZONE0) == 500);
     }
     SECTION("extra FLARM Data Source", "[single-file]")
     {
@@ -35,7 +34,7 @@ TEST_CASE("RadioProtocolCtx", "[single-file]")
         REQUIRE(etl::vector{OpenAce::DataSource::FLARM} == ctx.dataSourceTimeSlots);
     }
 
-    SECTION("3 Data Source s", "[single-file]")
+    SECTION("3 Data Sources", "[single-file]")
     {
         ctx.updateDataSources(etl::vector{OpenAce::DataSource::FLARM, OpenAce::DataSource::OGN1, OpenAce::DataSource::ADSL});
         ctx.prioritizeDatasources();
