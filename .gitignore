@@ -13,3 +13,4 @@ dist/
 # Experimental, but did not work
 package-lock.json
 .idea
+*.sh

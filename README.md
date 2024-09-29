@@ -32,3 +32,24 @@ other reasons.
 6. libcrc [https://github.com/lammertb/libcrc](https://github.com/lammertb/libcrc)
 7. minnmea for parding NMEA sentences [https://github.com/kosma/minmea/](https://github.com/kosma/minmea/)
 8. Catch2 for unit testing
+
+
+## Final note
+
+# OpenAce Disclaimer
+
+**Important Notice: Use at Your Own Risk**
+
+The OpenAce Conspicuity Device is provided "as is," without any guarantees or warranties of any kind. By using this device, you acknowledge and agree that:
+
+1. **No Warranty**: The creators of OpenAce make no claims or guarantees regarding the accuracy, reliability, or fitness for a specific purpose of the device or its associated software. This includes, but is not limited to, communication with OGN, Flarm, ADS-L, or any other protocols.
+
+2. **Assumption of Risk**: You assume full responsibility for any and all risks associated with the use of OpenAce. This includes, but is not limited to, risks related to hardware malfunctions, software issues, or incorrect transmission/interpretation of data.
+
+3. **Limitation of Liability**: Under no circumstances shall the creators, contributors, or affiliates of OpenAce be held liable for any direct, indirect, incidental, or consequential damages resulting from the use, misuse, or inability to use the device or its software.
+
+4. **General Aviation Use**: OpenAce is intended for use in General Aviation environments where multiple protocols such as OGN, Flarm, and ADS-L are used. It is **not certified** for professional or commercial aviation use and should not be relied upon as the sole source of traffic or navigation information.
+
+5. **Compliance**: Users are responsible for ensuring that the use of OpenAce complies with local aviation regulations and requirements. It is your responsibility to ensure that the device operates within the legal limits and safety standards for your jurisdiction.
+
+By using OpenAce, you agree to the terms of this disclaimer and acknowledge that you are using the device and its software at your own risk.

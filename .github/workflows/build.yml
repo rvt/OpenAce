@@ -1,0 +1,55 @@
+name: Build OpenAce
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install tree git python3 ninja-build cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib libusb-dev
+
+      - name: Checkout OpenAce
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Checkout pico-sdk/develop
+        uses: actions/checkout@v4
+        with:
+          repository: raspberrypi/pico-sdk
+          ref: develop
+          path: pico-sdk
+          submodules: true
+
+      - name: Checkout FreeRTOS/main
+        uses: actions/checkout@v4
+        with:
+          repository: FreeRTOS/FreeRTOS
+          ref: main
+          path: FreeRTOS
+          submodules: true
+
+      - name: Show workspace
+        run: |
+          echo "${{github.workspace}}"
+          tree ${{github.workspace}} -d -L 3
+
+      - name: Build Project
+        shell: bash
+        run: |
+          pwd
+          echo ${{ github.ref }}
+          export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk/
+          export FREERTOS_KERNEL_PATH=$GITHUB_WORKSPACE/FreeRTOS/FreeRTOS/Source/
+          cd src/pico
+          cmake -B build -G Ninja && ninja -C build $1
+          ls -lrt build/*.uf2
+
