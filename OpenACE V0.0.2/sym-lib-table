@@ -1,0 +1,12 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "E22-900M22S")(type "KiCad")(uri "/opt/kicad/E22-900M22S/E22-900M22S.kicad_sym")(options "")(descr ""))
+  (lib (name "SC0918")(type "KiCad")(uri "/opt/kicad/SC0918/SC0918.kicad_sym")(options "")(descr ""))
+  (lib (name "SC0915")(type "KiCad")(uri "/opt/kicad/SC0915/SC0915.kicad_sym")(options "")(descr ""))
+  (lib (name "GNS")(type "KiCad")(uri "/opt/kicad/GNS/GNS.kicad_sym")(options "")(descr ""))
+  (lib (name "E22-900M30S")(type "KiCad")(uri "/opt/kicad/E22-900M30S/E22-900M30S.kicad_sym")(options "")(descr ""))
+  (lib (name "Misc")(type "KiCad")(uri "/opt/kicad/misc/Misc.kicad_sym")(options "")(descr ""))
+  (lib (name "MCX-J-P-H-RA-TH1")(type "KiCad")(uri "/opt/kicad/MCX-J-P-H-RA-TH1/MCX-J-P-H-RA-TH1.kicad_sym")(options "")(descr ""))
+  (lib (name "LM3671MF-3.3")(type "KiCad")(uri "/opt/kicad/LM3671MF-3.3/LM3671MF-3.3.kicad_sym")(options "")(descr ""))
+  (lib (name "2023-09-29_17-40-16")(type "KiCad")(uri "/opt/kicad/ul_GT-TF003-H0185-02/2023-09-29_17-40-16.kicad_sym")(options "")(descr ""))
+)

@@ -1,0 +1,15 @@
+./default_config.hpp
+./config.hpp
+.pio
+wip/
+build/
+private.data/
+.parcel-cache
+node_modules/
+.DS_Store
+.venv
+
+dist/
+# Experimental, but did not work
+package-lock.json
+.idea

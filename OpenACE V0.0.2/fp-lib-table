@@ -1,0 +1,12 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "E22-900M22S")(type "KiCad")(uri "/opt/kicad/E22-900M22S")(options "")(descr ""))
+  (lib (name "BK-18650-PC2")(type "KiCad")(uri "/opt/kicad/BK-18650-PC2")(options "")(descr ""))
+  (lib (name "SC0918")(type "KiCad")(uri "/opt/kicad/SC0918")(options "")(descr ""))
+  (lib (name "GNS")(type "KiCad")(uri "/opt/kicad/gns")(options "")(descr ""))
+  (lib (name "E22-900M30S")(type "KiCad")(uri "/opt/kicad/E22-900M30S")(options "")(descr ""))
+  (lib (name "misc")(type "KiCad")(uri "/opt/kicad/misc")(options "")(descr ""))
+  (lib (name "ul_GT-TF003-H0185-02")(type "KiCad")(uri "/opt/kicad/ul_GT-TF003-H0185-02")(options "")(descr ""))
+  (lib (name "gnicerf")(type "KiCad")(uri "/opt/kicad/GNiceRF")(options "")(descr ""))
+  (lib (name "VGA-PicoW-KiCAD")(type "KiCad")(uri "/opt/kicad/VGA-PicoW-KiCAD/RPi_Pico.pretty")(options "")(descr ""))
+)
