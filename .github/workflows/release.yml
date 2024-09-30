@@ -62,7 +62,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: false
           draft: false
-          name: Prerelease
+          name: Release
           body_path: .github/release.md
           files: |
             LICENSE
