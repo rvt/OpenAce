@@ -1,6 +1,6 @@
-# Production version
+# Release version
 
-This is the **PRODUCTION** version of OpenAce, use at your own risk
+This is the **RELEASE** version of OpenAce, use at your own risk
 
 > [!TIP]
 > **OpenAce is an ongoing project** that is continuously being developed and improved. 

@@ -67,4 +67,4 @@ jobs:
           files: |
             LICENSE
             src/pico/build/*.uf2
-            .github/releasse.md
+            .github/release.md
