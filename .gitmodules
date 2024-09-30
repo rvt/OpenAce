@@ -7,3 +7,9 @@
 [submodule "src/vendor/Catch2"]
 	path = src/vendor/Catch2
 	url = https://github.com/catchorg/Catch2
+[submodule "enclosure/BOSL2"]
+	path = enclosure/BOSL2
+	url = https://github.com/revarbat/BOSL2
+[submodule "enclosure/NopSCADlib"]
+	path = enclosure/NopSCADlib
+	url = https://github.com/nophead/NopSCADlib
