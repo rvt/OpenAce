@@ -17,17 +17,11 @@ namespace OpenAce
 
     /**
      * Send by ADSB Modules contains RAW ADSB message in the form of
-     * *a8000fb18b51293820bcd5d0fe9c;
+     * *a8000fb18b51293820bcd5d0fe9c; in binary from
      */
-    // struct ADSBMessage : public etl::message<1>
-    // {
-    //     const ADSBString data;
-    //     ADSBMessage(const ADSBString &data_) : data(data_) {}
-    // };
-
     struct ADSBMessageBin : public etl::message<1>
     {
-        etl::array<uint8_t, 14> data;
+        etl::vector<uint8_t, 14> data;
     };
 
     /**

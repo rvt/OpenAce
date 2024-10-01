@@ -199,3 +199,16 @@ TEST_CASE( "addChecksumToNMEA", "[single-file]" )
     REQUIRE( (pflau.compare("$1234*04\r\n") == 0) );
 }
 
+TEST_CASE( "hexStrToByteArray overflow", "[single-file]" )
+{
+    uint8_t bytes[7];
+    bytes[6] = 0x12;
+    hexStrToByteArray("8D00FF4D2D58AA", sizeof(bytes) * 2 - 2, bytes);
+    REQUIRE( bytes[0] == 0x8D );
+    REQUIRE( bytes[1] == 0x00 );
+    REQUIRE( bytes[2] == 0xFF );
+    REQUIRE( bytes[3] == 0x4D );
+    REQUIRE( bytes[4] == 0x2D );
+    REQUIRE( bytes[5] == 0x58 );
+    REQUIRE( bytes[6] == 0x12 ); // should stay the same and not turn into AA
+}

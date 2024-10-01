@@ -62,8 +62,6 @@ public:
     {
     }
 
-    void hexStrToByteArray(const char hexString[], uint8_t numBytesInString, uint8_t *byteArray) const;
-
     static void dump1090Timer(TimerHandle_t xTimer);
 
     void processNewSentence(const char *sentence)
@@ -71,19 +69,15 @@ public:
         // Fast detection of msgType 17 and hexStrToByteArray to reduce resources
         if (sentence != nullptr && sentence[1] == '8' && (sentence[2] == 'D' || sentence[2] == 'A' || sentence[2] == '0'))
         {
-            uint8_t binarySize = (strlen(sentence) - 2) >> 1;
-            if (binarySize != 14)
+            uint8_t hexSize = strlen(sentence) - 2;
+            if (hexSize == 30) // 30 happens to be the size of message we are interested in
             {
-                return;
+                //puts(sentence);
+                OpenAce::ADSBMessageBin msg;
+                hexStrToByteArray(sentence + 1, (hexSize - 2), msg.data.data());
+                receiver->receiveBinary(msg.data.data(), msg.data.size());
+                statistics.totalReceived++;
             }
-            //puts("\033[;H");
-            //puts(sentence);
-            OpenAce::ADSBMessageBin msg;
-            hexStrToByteArray(sentence + 1, binarySize, msg.data.data());
-            receiver->receiveBinary(msg.data.data(), msg.data.size());
-            statistics.totalReceived++;
-
-            // getBus().receive(msg);
         }
     }
 

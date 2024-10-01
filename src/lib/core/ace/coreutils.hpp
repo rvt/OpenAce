@@ -340,7 +340,7 @@ public:
     */
     static void addChecksumToNMEA(etl::istring &nmea)
     {
-        char HEXBuffer[] = "0123456789ABCDEF";
+        const char hexChars[] = "0123456789ABCDEF";
         uint16_t chk = 0, i=1;
         while (nmea[i] && nmea[i] != '*')
         {
@@ -354,8 +354,8 @@ public:
         }
         nmea.resize(i + 5);
         nmea[i++] = '*';
-        nmea[i++] = HEXBuffer[chk >> 4];
-        nmea[i++] = HEXBuffer[chk & 0x0F];
+        nmea[i++] = hexChars[chk >> 4];
+        nmea[i++] = hexChars[chk & 0x0F];
         nmea[i++] = '\r';
         nmea[i++] = '\n';
         nmea[i++] = '\0';
@@ -365,3 +365,43 @@ public:
     static uint32_t getFreeHeap(void);
 };
 
+inline uint8_t getHexVal(char hex)
+{
+    uint8_t val = (uint8_t)hex;
+    // For uppercase A-F letters:
+    // return val - (val < 58 ? 48 : 55);
+    // For lowercase a-f letters:
+    // return val - (val < 58 ? 48 : 87);
+    // Or the two combined, but a bit slower:
+    return val - (val < 58 ? 48 : (val < 97 ? 55 : 87));
+}
+
+/**
+ * Convert a hex string in the form of 0123FA... to a byte array
+ */
+inline void hexStrToByteArray(const char hex[], uint8_t hexLength, uint8_t byteArray[]) 
+{
+    for (uint8_t i = 0, j = 0; i < hexLength; i += 2, ++j)
+    {
+        byteArray[j] = (getHexVal(hex[i]) << 4) | getHexVal(hex[i + 1]);
+    }
+}
+
+inline void hexStrToByteArray(const char *hex, uint8_t byteArray[]) 
+{
+    hexStrToByteArray(hex, strlen(hex), byteArray);
+}
+
+/**
+ * Convert a byteArray to a hex string, the reverse of hexStrToByteArray
+ */
+inline void byteArrayToHexStr(const uint8_t byteArray[], uint8_t byteArrayLength, char hexStr[])
+{
+    const char hexChars[] = "0123456789ABCDEF";    
+    for (uint8_t i = 0; i < byteArrayLength; ++i)
+    {
+        hexStr[i * 2]     = hexChars[(byteArray[i] >> 4) & 0x0F]; // Extract the upper 4 bits
+        hexStr[i * 2 + 1] = hexChars[byteArray[i] & 0x0F];        // Extract the lower 4 bits
+    }
+    hexStr[byteArrayLength * 2] = '\0'; // Null-terminate the string
+}

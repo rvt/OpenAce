@@ -77,6 +77,6 @@ void mode_s_compute_magnitude_vector(unsigned char *data, uint16_t *mag, uint32_
 void mode_s_detect(mode_s_t *self, uint16_t *mag, uint32_t maglen, mode_s_callback_t);
 void mode_s_decode(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *msg);
 void mode_s_decode_phase1(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *msg);
-void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *msg);
+void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm);
 
 #endif

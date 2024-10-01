@@ -336,7 +336,7 @@ int32_t decode_ac12_field(const uint8_t *msg, uint8_t *unit)
   }
 }
 
-static const char *ais_charset = "?ABCDEFGHIJKLMNOPQRSTUVWXYZ????? ???????????????0123456789??????";
+static const char ais_charset[] = "?ABCDEFGHIJKLMNOPQRSTUVWXYZ????? ???????????????0123456789??????";
 
 void mode_s_decode_phase1(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *msg_incomming)
 {
@@ -383,7 +383,7 @@ void mode_s_decode_phase1(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *
   mm->aa = msg[1] << 16 | msg[2] << 8 | msg[3];
 }
 
-void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *msg_incomming)
+void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm)
 {
   uint8_t *msg = mm->msg;
   // DF 17 type (assuming this is a DF17, otherwise not used)
@@ -505,12 +505,12 @@ void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *
         mm->ew_velocity = ((msg[5] & 3) << 8) | msg[6];
         mm->ns_dir = (msg[7] & 0x80) >> 7;
         mm->ns_velocity = ((msg[7] & 0x7f) << 3) | ((msg[8] & 0xe0) >> 5);
-        mm->vert_rate_source = (msg[8] & 0x10) >> 4;
-        uint8_t vert_rate_sign = (msg[8] & 0x8) >> 3;
-        mm->vert_rate = (((msg[8] & 7) << 6) | ((msg[9] & 0xfc) >> 2)) * (vert_rate_sign > 1 ? 1 : -1);
         // Compute velocity and angle from the two speed components
         mm->velocity = sqrtf(mm->ns_velocity * mm->ns_velocity +
                              mm->ew_velocity * mm->ew_velocity);
+        mm->vert_rate_source = (msg[8] & 0x10) >> 4; // GNSS altitude is encoded as 0, while 1 encodes the barometric altitude.
+        uint8_t vert_rate_sign = (msg[8] & 0x8);  // with 0 and 1 referring to climb and descent, respectively
+        mm->vert_rate = (((msg[8] & 7) << 6) | ((msg[9] & 0xfc) >> 2));
 
         if (mm->velocity)
         {
@@ -558,7 +558,7 @@ void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *
 void mode_s_decode(mode_s_t *self, struct mode_s_msg *mm, const uint8_t *msg_incomming)
 {
   mode_s_decode_phase1(self, mm, msg_incomming);
-  mode_s_decode_phase2(self, mm, msg_incomming);
+  mode_s_decode_phase2(self, mm);
 }
 
 // Turn I/Q samples pointed by `data` into the magnitude vector pointed by `mag`

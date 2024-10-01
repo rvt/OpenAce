@@ -21,7 +21,7 @@ struct AdsbCombinedDataStatus
     uint32_t lastSeen;
 
     // Data from ADSB
-    uint16_t velocity;          // Ground speed in knots
+    uint16_t velocity;          // Non decoded Ground speed in knots
     uint8_t category;           // category
     int16_t heading;            // Heading in degrees
     int32_t gnsAltitude;        // Altitude in meter
@@ -86,6 +86,7 @@ class AdsbDataCollector
     static constexpr uint8_t VALID_MASK = HAS_POSITION_ODD | HAS_POSITION_EVEN | HAS_HEADING | HAS_VELOCITY | HAS_ALTITUDE | HAS_POSITION_UPDATED;
 
     static constexpr uint32_t CLEAR_UP_SIZE = (SIZE * 90) / 100;
+
 private:
     struct AdsbCombinedDataStatusEq
     {
@@ -169,7 +170,7 @@ public:
         auto evictTime = EVICT_TIME_MS;
         while ((cache.size() > CLEAR_UP_SIZE) && evictTime > 2000)
         {
-            for (auto it = cache.cbegin(); it != cache.cend(); )
+            for (auto it = cache.cbegin(); it != cache.cend();)
             {
                 if (it->second.evict || (CoreUtils::msElapsed(it->second.lastSeen, msSinceBoot) > evictTime))
                 {

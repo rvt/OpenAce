@@ -75,23 +75,3 @@ void Dump1090Client::getData(etl::string_stream &stream, const etl::string_view 
     stream << "\"totalReceived\":" << statistics.totalReceived;
     stream << "}\n";
 }
-
-inline uint8_t getHexVal(char hex)
-{
-    uint8_t val = (uint8_t)hex;
-    // For uppercase A-F letters:
-    return val - (val < 58 ? 48 : 55);
-    // For lowercase a-f letters:
-    // return val - (val < 58 ? 48 : 87);
-    // Or the two combined, but a bit slower:
-    // return val - (val < 58 ? 48 : (val < 97 ? 55 : 87));
-}
-
-void Dump1090Client::hexStrToByteArray(const char hex[], uint8_t numBytes, uint8_t *byteArray) const
-{
-    const uint8_t hexLength = numBytes << 1;
-    for (uint8_t i = 0, j = 0; i < hexLength; i += 2, ++j)
-    {
-        byteArray[j] = (getHexVal(hex[i]) << 4) | getHexVal(hex[i + 1]);
-    }
-}

@@ -52,10 +52,6 @@ namespace OpenAce
     // PinType alias to uint8_t
     PinType stringToPinType(const char *str);
 
-    // OpenAce::positionTs represent a timestamp of the current ms of the position of the aircraft
-    // This currently represents a 32 unsigned int of the current day.
-    using positionTs = uint64_t;
-
     /**
      * Typee of aircraft
      * MUST follow Flarm's DataPort spec. If this is changed, DataPort / Flarm must be updated

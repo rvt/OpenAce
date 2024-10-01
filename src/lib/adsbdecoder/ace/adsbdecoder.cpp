@@ -49,12 +49,9 @@ void ADSBDecoder::receiveBinary(const uint8_t *data, uint8_t length)
     processAdsbData(data, length);
 }
 
-/**
- * THis code requires cleanup!
- *
- */
 void ADSBDecoder::on_receive(const OpenAce::ADSBMessageBin &msg)
 {
+    processAdsbData(msg.data.data(), msg.data.size());
 }
 
 void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
@@ -84,7 +81,7 @@ void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
         statistics.totalMsgIgnored++;
         return;
     }
-    mode_s_decode_phase2(state, &mm, data);
+    mode_s_decode_phase2(state, &mm);
 
     //    auto usSinceBoot = CoreUtils::usSinceBoot();
     if (!adsbDataCollector.start(mm.aa, msSinceBoot))
@@ -181,15 +178,15 @@ void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
                 current.icao,
                 OpenAce::AddressType::ICAO,
                 OpenAce::DataSource::ADSB,
-                OpenAce::AircraftCategory::JetTurbopropEngine, // ADSB does not have type
+                OpenAce::AircraftCategory::Unknown,            // ADSB does not have type
                 false,                                         // ADSB does not have privacy
                 false,                                         // Heading is always a known
                 current.airborne,
                 current.lat,
                 current.lon,
                 current.gnsAltitude > INT16_MAX ? INT16_MAX : static_cast<int16_t>(current.gnsAltitude),
-                       (float)current.vert_rate,
-                       (float)current.velocity,
+                       64.f * (current.vert_rate-1) * FTPMIN_TO_MS, // https://mode-s.org/decode/content/ads-b/5-airborne-velocity.html,
+                       (float)current.velocity * KN_TO_MS,
                        static_cast<int16_t>(current.heading),
                        0.0f,
                        0.0f,

@@ -69,7 +69,7 @@ public:
 
     virtual void stop() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const;
+    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
 
 private:
     void getConfiguration(const Configuration &config);
@@ -81,10 +81,9 @@ private:
     /**
      * Change a hex string into a byte array
      */
-    void hexStrToByteArray(const char hexString[], uint8_t numBytesInString, uint8_t *byteArray) const;
     void on_receive(const OpenAce::ADSBMessageBin &msg);
 
-    virtual void receiveBinary(const uint8_t* data, uint8_t length);
+    virtual void receiveBinary(const uint8_t* data, uint8_t length) override;
     void processAdsbData(const uint8_t* data, uint8_t length);
 
     bool outOfAltitudeRange(int32_t otherCraftAltitude)
