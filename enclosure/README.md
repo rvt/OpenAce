@@ -8,6 +8,8 @@ To open the `*.scad` file you need to use the latest version of [OpenSCAD](https
 From OpenSCAD you can directly export an STL for 3D printing, or make your modifications if needed.
 If you have any cool or usefull modifications do let me know, I would love to hear them!
 
+![Pruca Slicer](../doc/img/openscad.png).
+
 ## How to 3D print
 
 From OpenSCAD from the menu use `Design -> Render`, this might take a few seconds depending on your CPU.
