@@ -1,7 +1,7 @@
 # OpenAce Conspicuity Device
 
 > **_NOTE:_**: 
-> I am in the process of uploading the necessary files to GitHub. More will be added soon, including the OpenSCAD case, KiCAD PCB files, unit tests for the source code, and additional resources.
+> I am in the process of uploading the necessary files to GitHub. More will be added soon, including the ~~OpenSCAD enclosure~~ [enclosure](https://github.com/rvt/OpenAce/tree/initial/enclosure), ~~KiCAD PCB files~~ [Schematic/PCB](https://github.com/rvt/OpenAce/tree/initial/OpenACE%20V0.0.2), unit tests for the source code, and additional resources.
 
 > [!TIP]
 > Please visit the [OpenAce WIKI](https://github.com/rvt/OpenAce/wiki) for build information.
@@ -21,8 +21,7 @@ The PCB measures approximately 8x9 cm.
 
 ## External Libraries and frameworks used
 
-Most libraries are used 'as-is' Some of them have been slightly modified for performance reasons, compatibility or 
-other reasons.
+Most libraries are used 'as-is' Some of them have been slightly modified for performance reasons, compatibility or other reasons.
 
 1. Raspberry PI PICO SDK [https://github.com/raspberrypi/pico-sdk](https://github.com/raspberrypi/pico-sdk)
 2. FreeRTOS, OpenAce uses tasks and timers and avoids loops and runs in multi-core SMP mode. [https://www.freertos.org](https://www.freertos.org)
@@ -34,22 +33,16 @@ other reasons.
 8. Catch2 for unit testing
 
 
-## Final note
-
 # OpenAce Disclaimer
 
-**Important Notice: Use at Your Own Risk**
-
-The OpenAce Conspicuity Device is provided "as is," without any guarantees or warranties of any kind. By using this device, you acknowledge and agree that:
-
-1. **No Warranty**: The creators of OpenAce make no claims or guarantees regarding the accuracy, reliability, or fitness for a specific purpose of the device or its associated software. This includes, but is not limited to, communication with OGN, Flarm, ADS-L, or any other protocols.
-
-2. **Assumption of Risk**: You assume full responsibility for any and all risks associated with the use of OpenAce. This includes, but is not limited to, risks related to hardware malfunctions, software issues, or incorrect transmission/interpretation of data.
-
-3. **Limitation of Liability**: Under no circumstances shall the creators, contributors, or affiliates of OpenAce be held liable for any direct, indirect, incidental, or consequential damages resulting from the use, misuse, or inability to use the device or its software.
-
-4. **General Aviation Use**: OpenAce is intended for use in General Aviation environments where multiple protocols such as OGN, Flarm, and ADS-L are used. It is **not certified** for professional or commercial aviation use and should not be relied upon as the sole source of traffic or navigation information.
-
-5. **Compliance**: Users are responsible for ensuring that the use of OpenAce complies with local aviation regulations and requirements. It is your responsibility to ensure that the device operates within the legal limits and safety standards for your jurisdiction.
-
-By using OpenAce, you agree to the terms of this disclaimer and acknowledge that you are using the device and its software at your own risk.
+> [!IMPORTANT]
+> **Important Notice: Use at Your Own Risk**
+>
+> The OpenAce Conspicuity Device is provided "as is," without any guarantees or warranties of any kind. By using this device, you acknowledge and agree that:
+> 1. **No Warranty**: The creators of OpenAce make no claims or guarantees regarding the accuracy, reliability, or fitness for a specific purpose of the device or its associated software. This includes, but is not limited to, communication with OGN, Flarm, ADS-L, or any other protocols.
+> 2. **Assumption of Risk**: You assume full responsibility for any and all risks associated with the use of OpenAce. This includes, but is not limited to, risks related to hardware malfunctions, software issues, or incorrect transmission/interpretation of data.
+> 3. **Limitation of Liability**: Under no circumstances shall the creators, contributors, or affiliates of OpenAce be held liable for any direct, indirect, incidental, or consequential damages resulting from the use, misuse, or inability to use the device or its software.
+> 4. **General Aviation Use**: OpenAce is intended for use in General Aviation environments where multiple protocols such as OGN, Flarm, and ADS-L are used. It is **not certified** for professional or commercial aviation use and should not be relied upon as the sole source of traffic or navigation information.
+> 5. **Compliance**: Users are responsible for ensuring that the use of OpenAce complies with local aviation regulations and requirements. It is your responsibility to ensure that the device operates within the legal limits and safety standards for your jurisdiction.
+>
+> By using OpenAce, you agree to the terms of this disclaimer and acknowledge that you are using the device and its software at your own risk.
