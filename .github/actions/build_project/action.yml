@@ -1,15 +1,27 @@
 name: Build Project
 
+inputs:
+  test:
+    description: 'Run tests'
+    required: false
+    default: 'false'
+  build:
+    description: 'Build the project'
+    required: false
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
     - name: Run Tests
+      if: ${{ inputs.test == 'true' }}
       shell: bash
       run: |
         cd src
         cmake -B build_test -G Ninja && ninja -C build_test
 
     - name: Build Project
+      if: ${{ inputs.build == 'true' }}
       shell: bash
       run: |
         export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk/
