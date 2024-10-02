@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <math.h>
-#include <sys/time.h>
+#include <time.h>
 
 #define MODE_S_ICAO_CACHE_LEN 64 // Power of two required
 #define MODE_S_LONG_MSG_BYTES (112/8)
@@ -55,6 +55,7 @@ struct mode_s_msg {
   uint8_t ns_dir;                  // 0 = North, 1 = South.
   int ns_velocity;                 // N/S velocity.
   uint8_t vert_rate_source;        // Vertical rate source.
+  uint8_t vert_rate_sign;     // Vertical rate sign.
   int16_t vert_rate;               // Vertical rate.
   uint16_t velocity;               // Computed from EW and NS velocity.
 

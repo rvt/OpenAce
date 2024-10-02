@@ -1,0 +1,25 @@
+name: Build OpenAce
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout OpenAce
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup_env
+
+      - name: Build and Test
+        uses: ./.github/actions/build_project

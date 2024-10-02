@@ -1,0 +1,35 @@
+name: setup-env
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        sudo apt-get remove --purge gcc-11
+        sudo apt-get install tree git python3 ninja-build cmake gcc-12 gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib libusb-dev
+
+    - name: Checkout pico-sdk
+      uses: actions/checkout@v4
+      with:
+        repository: raspberrypi/pico-sdk
+        ref: '2.0.0'
+        path: pico-sdk
+        submodules: true
+
+    - name: Checkout FreeRTOS
+      uses: actions/checkout@v4
+      with:
+        repository: FreeRTOS/FreeRTOS-Kernel
+        ref: 'V11.1.0'
+        path: FreeRTOS-Kernel
+        submodules: true
+
+    - name: Show workspace
+      shell: bash
+      run: |
+        pwd
+        gcc --version
+        echo "ref: ${{ github.ref }}"
+        echo "Workspace: ${{github.workspace}}"
+        tree ${{github.workspace}} -d -L 3        

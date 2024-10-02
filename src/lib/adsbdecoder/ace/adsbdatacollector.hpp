@@ -32,6 +32,7 @@ struct AdsbCombinedDataStatus
     int16_t baro_gnss_diff;     // Difference between barometric altitude and GNSS altitude
     float lat;                  // lat
     float lon;                  // lon
+    uint8_t vert_rate_sign;     // Vert Rate Sign
     int16_t vert_rate;          // Non decoded longitude
     bool airborne;              // Non decoded longitude
     bool evict;                 // When set to true, the aircraft needs to be removed from cache
@@ -124,6 +125,9 @@ private:
     }
 
 public:
+    void clear() {
+        cache.clear();
+    }
     bool start(uint32_t address, uint32_t msSinceBoot)
     {
         auto it = cache.find(address);
@@ -253,12 +257,13 @@ public:
         currentDataStatus->messageStatus |= HAS_HEADING;
         currentDataStatus->heading = heading;
     }
-    inline void updateVelocityHeadingBaroDiff(uint16_t velocity, int16_t vert_rate, int16_t heading, int16_t baro_gnss_diff)
+    inline void updateVelocityHeadingBaroDiff(uint16_t velocity, int16_t vert_rate,uint8_t vert_rate_sign, int16_t heading, int16_t baro_gnss_diff)
     {
         currentDataStatus->messageStatus |= HAS_HEADING;
         currentDataStatus->messageStatus |= HAS_VELOCITY;
         currentDataStatus->velocity = velocity;
         currentDataStatus->vert_rate = vert_rate;
+        currentDataStatus->vert_rate_sign = vert_rate_sign;
         currentDataStatus->heading = heading;
         currentDataStatus->baro_gnss_diff = baro_gnss_diff;
     }

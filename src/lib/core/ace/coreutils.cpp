@@ -24,7 +24,7 @@ const etl::vector<OpenAce::Modulename, 7> CoreUtils::parsePath(const etl::string
 
 uint32_t CoreUtils::getTotalHeap(void)
 {
-#if defined(__MACH__)
+#if !defined(__arm__)
     return 0;
 #else
     extern char __StackLimit, __bss_end__;
@@ -35,9 +35,9 @@ uint32_t CoreUtils::getTotalHeap(void)
 
 uint32_t CoreUtils::getFreeHeap(void)
 {
-// We hit this during unit testing, we retrun 0 because it would
+// We hit this during unit testing, we return 0 because it would
 // properly be useless
-#if defined(__MACH__)
+#if !defined(__arm__)
     return 0;
 #else
     struct mallinfo m = mallinfo();

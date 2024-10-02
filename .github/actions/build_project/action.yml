@@ -1,0 +1,20 @@
+name: Build Project
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Tests
+      shell: bash
+      run: |
+        cd src
+        cmake -B build_test -G Ninja && ninja -C build_test
+
+    - name: Build Project
+      shell: bash
+      run: |
+        export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk/
+        export FREERTOS_KERNEL_PATH=$GITHUB_WORKSPACE/FreeRTOS-Kernel
+        cd src/pico
+        cmake -B build -G Ninja && ninja -C build $1
+        for file in build/*.uf2; do mv "$file" "build/develop_$(basename "$file")"; done
+        ls -lrt build/*.uf2

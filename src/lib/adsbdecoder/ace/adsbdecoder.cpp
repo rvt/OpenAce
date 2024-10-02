@@ -5,13 +5,17 @@
 
 OpenAce::PostConstruct ADSBDecoder::postConstruct()
 {
-    state = new mode_s_t;
+    if (state == nullptr) {
+        state = new mode_s_t;
+    }
     if (state == nullptr)
     {
         return OpenAce::PostConstruct::MEMORY;
     }
     state->fix_errors = false; // Not enough resources
     mode_s_init(state);
+    ignoredAirplanes.clear();
+    adsbDataCollector.clear();
     return OpenAce::PostConstruct::OK;
 }
 
@@ -128,7 +132,7 @@ void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
         {
             if (mm.mesub == 1 || mm.mesub == 2)
             {
-                adsbDataCollector.updateVelocityHeadingBaroDiff(mm.velocity, mm.vert_rate, mm.heading, mm.head);
+                adsbDataCollector.updateVelocityHeadingBaroDiff(mm.velocity, mm.vert_rate, mm.vert_rate_sign, mm.heading, mm.head);
             }
             else if (mm.mesub == 3 || mm.mesub == 4)
             {
@@ -185,15 +189,15 @@ void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
                 current.lat,
                 current.lon,
                 current.gnsAltitude > INT16_MAX ? INT16_MAX : static_cast<int16_t>(current.gnsAltitude),
-                       64.f * (current.vert_rate-1) * FTPMIN_TO_MS, // https://mode-s.org/decode/content/ads-b/5-airborne-velocity.html,
-                       (float)current.velocity * KN_TO_MS,
-                       static_cast<int16_t>(current.heading),
-                       0.0f,
-                       0.0f,
-                       fromOwn.distance,
-                       fromOwn.relNorth,
-                       fromOwn.relEast,
-                       fromOwn.bearing
+                (current.vert_rate-1) * (current.vert_rate_sign?-64.f * FTPMIN_TO_MS:64.f * FTPMIN_TO_MS), // https://mode-s.org/decode/content/ads-b/5-airborne-velocity.html,
+                (float)current.velocity * KN_TO_MS,
+                static_cast<int16_t>(current.heading),
+                0.0f,
+                0.0f,
+                fromOwn.distance,
+                fromOwn.relNorth,
+                fromOwn.relEast,
+                fromOwn.bearing
             }});
     }
 }

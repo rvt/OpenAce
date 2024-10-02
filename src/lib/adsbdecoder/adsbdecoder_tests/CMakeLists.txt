@@ -63,6 +63,8 @@ foreach(name ${TARGETS_IDIOMATIC_EXAMPLES})
     COMMAND ${UNIT_TEST})
 endforeach()
 
+configure_file(adsb.txt adsb.txt COPYONLY)
+
 set(ALL_EXAMPLE_TARGETS ${TARGETS_IDIOMATIC_EXAMPLES})
 
 foreach(name ${ALL_EXAMPLE_TARGETS})

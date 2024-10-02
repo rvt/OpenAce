@@ -509,7 +509,7 @@ void mode_s_decode_phase2(mode_s_t *self, struct mode_s_msg *mm)
         mm->velocity = sqrtf(mm->ns_velocity * mm->ns_velocity +
                              mm->ew_velocity * mm->ew_velocity);
         mm->vert_rate_source = (msg[8] & 0x10) >> 4; // GNSS altitude is encoded as 0, while 1 encodes the barometric altitude.
-        uint8_t vert_rate_sign = (msg[8] & 0x8);  // with 0 and 1 referring to climb and descent, respectively
+        mm->vert_rate_sign = (msg[8] & 0x8);  // with 0 and 1 referring to climb and descent, respectively
         mm->vert_rate = (((msg[8] & 7) << 6) | ((msg[9] & 0xfc) >> 2));
 
         if (mm->velocity)
