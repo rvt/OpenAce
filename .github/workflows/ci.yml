@@ -9,7 +9,28 @@ on:
       - '*'
 
 jobs:
-  build:
+  Test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout OpenAce
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          sudo apt-get remove --purge gcc-11
+          sudo apt-get install tree git ninja-build cmake gcc-12
+
+      - name: Build and Test
+        uses: ./.github/actions/build_project
+        with:
+          test: 'true'
+
+
+  Firmware:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,3 +44,5 @@ jobs:
 
       - name: Build and Test
         uses: ./.github/actions/build_project
+        with:
+          build: 'true'

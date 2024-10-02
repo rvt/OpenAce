@@ -54,6 +54,9 @@ class AddressCache
     etl::flat_set<AddressStatus, SIZE, AddressComparator> cache;
 
 public:
+    void clear() {
+        cache.clear();
+    }
     size_t size() const
     {
         return cache.size();
