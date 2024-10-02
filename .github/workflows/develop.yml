@@ -41,14 +41,20 @@ jobs:
 
       - name: Show workspace
         run: |
-          echo "${{github.workspace}}"
+          pwd
+          echo "ref: ${{ github.ref }}"
+          echo "Workspace: ${{github.workspace}}"
           tree ${{github.workspace}} -d -L 3
+
+      - name: Run Tests
+        shell: bash
+        run: |
+          cd src
+          cmake -B build_test -G Ninja && ninja -C build_test
 
       - name: Build Project
         shell: bash
         run: |
-          pwd
-          echo ${{ github.ref }}
           export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk/
           export FREERTOS_KERNEL_PATH=$GITHUB_WORKSPACE/FreeRTOS/FreeRTOS/Source/
           cd src/pico
