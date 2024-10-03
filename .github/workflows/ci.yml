@@ -18,8 +18,8 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup Environment
-        uses: ./.github/actions/setup_env
+#      - name: Setup Environment
+#        uses: ./.github/actions/setup_env
 
       - name: Build and Test
         uses: ./.github/actions/build_project
