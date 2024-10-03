@@ -18,9 +18,6 @@ jobs:
         with:
           submodules: true
 
-#      - name: Setup Environment
-#        uses: ./.github/actions/setup_env
-
       - name: Install Dependencies
         shell: bash
         run: |
@@ -31,7 +28,7 @@ jobs:
         uses: ./.github/actions/build_project
         with:
           test: 'true'
-          
+
 
   Firmware:
     runs-on: ubuntu-latest
