@@ -21,6 +21,12 @@ jobs:
 #      - name: Setup Environment
 #        uses: ./.github/actions/setup_env
 
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          sudo apt-get remove --purge gcc-11
+          sudo apt-get install tree git ninja-build cmake gcc-12
+
       - name: Build and Test
         uses: ./.github/actions/build_project
         with:
