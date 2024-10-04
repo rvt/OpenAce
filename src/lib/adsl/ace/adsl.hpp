@@ -90,7 +90,7 @@ public:
         int32_t v = config.valueByPath(25000, "ADSL", "distanceIgnore");
         distanceIgnore = std::max((int32_t)0, std::min(v, MAX_IGNORE_DISTANCE));
         openAceConfiguration = config.openAceConfig();
-x    }
+    }
 
     virtual ~ADSL() = default;
 
