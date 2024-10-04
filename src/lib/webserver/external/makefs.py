@@ -156,6 +156,7 @@ def main(directory, fileName):
         for root, _, fileNames in os.walk(directory):
             for fileName in fileNames:
                 files.append(os.path.join(root, fileName))
+        files.sort()
         
         for filePath in files:
             fileName = filePath.replace(directory, "")

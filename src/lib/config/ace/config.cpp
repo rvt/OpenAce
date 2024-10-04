@@ -2,6 +2,7 @@
 #include "config.hpp"
 
 #include "hardware/watchdog.h"
+#include "pico/bootrom.h"
 
 /* OpenACE. */
 #include "ace/coreutils.hpp"
@@ -147,16 +148,25 @@ bool Config::setData(const etl::string_view data, const etl::string_view fullPat
     {
         if (path.size() > 0)
         {
-            if (path.back() == "SaveBR")
+            if (path.back() == "SaveBr")
             {
                 doc["config"]["_dirty"] = false;
                 serializeToVolatile();
                 serializeToPersistent();
             }
-            // TODO: See if its possible to make something that this is not done in config
-            else if (path.back() == "restart")
+            // TODO: See if its possible to make something that these two are not in the config            
+            else if (path.back() == "Restart")
             {
                 watchdog_reboot(0, 0, 0);
+                while (true)
+                {
+                    tight_loop_contents();
+                }
+            }
+            // Restart the Pico in USB mode so that the user can upload a new firmware
+            else if (path.back() == "UsbBoot")
+            {
+                reset_usb_boot(0, 0);
                 while (true)
                 {
                     tight_loop_contents();
@@ -185,7 +195,6 @@ bool Config::setData(const etl::string_view data, const etl::string_view fullPat
                     // Must add a non const ptr for ArduinoJson so a copy will be made instead of reference
                     src = src[const_cast<char *>(key.c_str())].to<JsonObject>();
                 }
-
                 deserializeJson(src, data.cbegin(), data.size());
                 dataMutated = true;
             }

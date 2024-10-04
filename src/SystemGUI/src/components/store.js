@@ -149,13 +149,19 @@ export class OpenAceStore {
     });
   }
   storeInBRModuleData() {
-    return store.fetch(`/api/_Configuration/SaveBR.json`, {
+    return store.fetch(`/api/_Configuration/SaveBr.json`, {
       method: "POST",
       body: {},
     });
   }
   restart() {
-    return store.fetch(`/api/_Configuration/restart.json`, {
+    return store.fetch(`/api/_Configuration/Restart.json`, {
+      method: "POST",
+      body: {},
+    });
+  }
+  usbBoot() {
+    return store.fetch(`/api/_Configuration/UsbBoot.json`, {
       method: "POST",
       body: {},
     });

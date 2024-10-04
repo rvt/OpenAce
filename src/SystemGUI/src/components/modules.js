@@ -96,8 +96,16 @@ class OpenAceModules extends El {
     this.state.restartDlg = false;
   }
 
+  _usbBoot() {
+    store.usbBoot();
+    this.state.usbBootDlg = false;
+  }
+
   _restartButton(html) {
     return html`<button class="btn xs" onclick=${() => (this.state.restartDlg = true)}>Restart</button>`;
+  }
+  _usbBootButton(html) {
+    return html`<button class="btn xs" onclick=${() => (this.state.usbBootDlg = true)}>Upload Firmware</button>`;
   }
 
   _restartAreYouSureDlg(html) {
@@ -107,7 +115,7 @@ class OpenAceModules extends El {
           <header>
             <h4>Restart OpenAce?</h4>
           </header>
-          <div class="overflow-auto">
+          <div class="overflow-auto accent-primary" style="color: black"> <!-- Quick hack to make text black on Safari Desktop -->
             <p>
               The connection will be temporary disconnected. Any unsaved data will be available after restart.<br />
               Are you sure?
@@ -116,6 +124,30 @@ class OpenAceModules extends El {
           <footer class="px-2 jc-end">
             <button type="button" class="btn btn-error sm ml-1 md-ml-3" onclick=${this._restart}>Yes</button>
             <button type="button" class="btn btn-primary sm ml-1 md-ml-3" onclick=${() => (this.state.restartDlg = false)}>No</button>
+          </footer>
+        </article>
+      </div>
+    </div>`;
+  }
+
+  _usbBootDlgAreYouSureDlg(html) {
+    return html` <div class="modal blur show">
+      <div class="modal-content mw-400 rounded">
+        <article class="shadow accent-light">
+          <header>
+            <h4>Start Firmware mode?</h4>
+          </header>
+          <div class="overflow-auto accent-primary" style="color: black"> <!-- Quick hack to make text black on Safari Desktop -->
+            <p>
+             To update OpenAce, make sure it is connected to your computer with a USB cable through the <strong>Microcontroller port</strong> (the charge port won’t work for this step).
+             </p>
+             <p>
+             When OpenAce restarts, it will show up as a new drive on your computer. Once you see the drive, simply drag and drop the <strong>OpenAce.uf2</strong> file onto it. After a moment, the device will restart automatically, and OpenAce will be ready to use again.
+            </p>
+          </div>
+          <footer class="px-2 jc-end">
+            <button type="button" class="btn btn-error sm ml-1 md-ml-3" onclick=${this._usbBoot}>Yes</button>
+            <button type="button" class="btn btn-primary sm ml-1 md-ml-3" onclick=${() => (this.state.usbBootDlg = false)}>No</button>
           </footer>
         </article>
       </div>
@@ -245,8 +277,12 @@ class OpenAceModules extends El {
   _showModuleOverview(html) {
     let items = this._filteredItems();
     return html`
-      <div>${this._restartButton(html)}</div>
+      <div class="grid md-columns-2 lg-columns-3 ">
+        <div>${this._restartButton(html)}</div>
+        <div>${this._usbBootButton(html)}</div>
+      </div>
       ${this.state.restartDlg ? this._restartAreYouSureDlg(html) : ""}
+      ${this.state.usbBootDlg ? this._usbBootDlgAreYouSureDlg(html) : ""}
       <div class="section">
         <table>
           <tbody>
