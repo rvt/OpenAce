@@ -26,8 +26,7 @@ void Flarm2024::bteaEncode(uint32_t *data) const
         }
         y = data[0];
         z = data[BTEA_N - 1] += MX(z, y, sum, e, BTEA_N - 1, BTEA_KEYS.data());
-    }
-    while (--rounds);
+    } while (--rounds);
 }
 
 void Flarm2024::bteaDecode(uint32_t *data) const
@@ -47,8 +46,7 @@ void Flarm2024::bteaDecode(uint32_t *data) const
         z = data[BTEA_N - 1];
         y = data[0] -= MX(z, y, sum, e, 0, BTEA_KEYS.data());
         sum -= BTEA_DELTA;
-    }
-    while (--rounds);
+    } while (--rounds);
 }
 
 void Flarm2024::scramble(uint32_t *data, uint32_t timestamp) const
@@ -134,11 +132,11 @@ void Flarm2024::getData(etl::string_stream &stream, const etl::string_view optio
     {
         stream << "\"f" << stat.frequency << "\":\"" << stat.timeTenthMs.to_string() << "\",";
     }
-
     stream << "\"receivedAircraftPositions\":" << statistics.receivedAircraftPositions;
     stream << ",\"transmittedAircraftPositions\":" << statistics.transmittedAircraftPositions;
     stream << ",\"crcErrors\":" << statistics.crcErrors;
     stream << ",\"outOfDistance\":" << statistics.outOfDistance;
+    stream << ",\"ownshipAddress\":" << openAceConfiguration.address;
     stream << ",\"addressType\":[" << statistics.addressType[0] << "," << statistics.addressType[1] << "," << statistics.addressType[2] << "," << statistics.addressType[3] << "]";
     stream << ",\"queueFull\":" << statistics.queueFull;
     stream << ",\"msgType\":[" << statistics.msgType[0] << "," << statistics.msgType[1] << "," << statistics.msgType[2] << "," << statistics.msgType[3] << "]";
@@ -254,12 +252,12 @@ int8_t Flarm2024::parseFrame(uint32_t *packet, uint32_t epochSeconds, int16_t rs
 
     float groundSpeed = descale<8, 2, false>(radioPacket->groundSpeed) / 10.0f;
 
-    char icaoAddress[7];
-    sprintf(icaoAddress, "%.6X", radioPacket->aircraftID);
+    OpenAce::IcaoAddress icaoAddress;
+    etl::string_stream stream(icaoAddress);
+    stream << etl::hex << radioPacket->aircraftID;
 
     statistics.receivedAircraftPositions++;
-    OpenAce::AircraftPositionMsg aircraftPosition
-    {
+    OpenAce::AircraftPositionMsg aircraftPosition{
         OpenAce::AircraftPositionInfo{
             flarmTsMsEpoch,
             icaoAddress,
@@ -314,9 +312,40 @@ void Flarm2024::flarmReceiveTask(void *arg)
                 continue;
             }
 
+            // Ignore ownship address
+            if (packet->aircraftID == flarm->openAceConfiguration.address)
+            {
+                continue;
+            }
+
             flarm->addReceiveStat(msg.frequency);
             flarm->parseFrame(msg.frame, msg.epochSeconds, msg.rssidBm);
         }
+    }
+}
+
+void Flarm2024::on_receive(const OpenAce::RadioRxFrame &msg)
+{
+    if (msg.dataSource == OpenAce::DataSource::FLARM)
+    {
+        const OpenAce::RadioRxFrame cpy = msg;
+        if (xQueueSendToBack(frameConsumerQueue, &cpy, TASK_DELAY_MS(5)) != pdPASS)
+        {
+            statistics.queueFull++;
+        }
+    }
+}
+
+void Flarm2024::on_receive(const OpenAce::OwnshipPositionMsg &msg)
+{
+    ownshipPosition = msg.position;
+}
+
+void Flarm2024::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
+{
+    if (msg.moduleName == "config")
+    {
+        openAceConfiguration = msg.config.openAceConfig();
     }
 }
 
@@ -354,32 +383,31 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
 
         uint32_t epochSeconds = (CoreUtils::msSinceEpoch()) / 1000;
         RadioPacket radioPacket =
-        {
-            .aircraftID = openAceConfiguration.address, // ownshipPosition.address,
-            .messageType = 0x02,
-            .addressType = addressType <= 2 ? addressType : uint8_t(0),
-            .reserved1 = 0,
-            .stealth = openAceConfiguration.stealth,
-            .noTrack = openAceConfiguration.noTrack,
-            .reserved3 = 0b11,
-            .reserved4 = 0b11,
-            .reserved5 = 0x00,
-            .flarmTimestampLSB = static_cast<uint8_t>(epochSeconds & 0x0F),
-            .aircraftType = static_cast<uint8_t>(openAceConfiguration.category),
-            .reserved7 = 0x00,
-            .altitude = static_cast<uint16_t>(enscale<12, 1, false>(ownshipPosition.altitudeWgs84 + 1000)),
-            .latitude = latitude,
-            .longitude = longitude,
-            .turnRate = static_cast<int16_t>(enscale<6, 2, true>(ownshipPosition.hTurnRate * 20)),
-            .groundSpeed = static_cast<uint16_t>(enscale<8, 2, false>(ownshipPosition.groundSpeed * 10)),
-            .verticalSpeed = static_cast<int16_t>(enscale<6, 2, true>(ownshipPosition.verticalSpeed * 10)),
-            .course = static_cast<uint16_t>(ownshipPosition.course * 2),
-            .movementStatus = static_cast<uint8_t>(ownshipPosition.groundSpeed > OpenAce::GROUNDSPEED_CONSIDERING_AIRBORN ? 2 : 1), // TODO: Add support for Circling
-            .gnssHorizontalAccuracy = 0b010010,                                                                                     // enscale<3, 2, false>((gpsStats.hDop*2+5)/10),
-            .gnssVerticalAccuracy = 0b01010,                                                                                        // enscale<2, 3, false>((gpsStats.pDop*2+5)/10),
-            .unknownData = 11,
-            .reserved8 = 0
-        };
+            {
+                .aircraftID = openAceConfiguration.address, // ownshipPosition.address,
+                .messageType = 0x02,
+                .addressType = addressType <= 2 ? addressType : uint8_t(0),
+                .reserved1 = 0,
+                .stealth = openAceConfiguration.stealth,
+                .noTrack = openAceConfiguration.noTrack,
+                .reserved3 = 0b11,
+                .reserved4 = 0b11,
+                .reserved5 = 0x00,
+                .flarmTimestampLSB = static_cast<uint8_t>(epochSeconds & 0x0F),
+                .aircraftType = static_cast<uint8_t>(openAceConfiguration.category),
+                .reserved7 = 0x00,
+                .altitude = static_cast<uint16_t>(enscale<12, 1, false>(ownshipPosition.altitudeWgs84 + 1000)),
+                .latitude = latitude,
+                .longitude = longitude,
+                .turnRate = static_cast<int16_t>(enscale<6, 2, true>(ownshipPosition.hTurnRate * 20)),
+                .groundSpeed = static_cast<uint16_t>(enscale<8, 2, false>(ownshipPosition.groundSpeed * 10)),
+                .verticalSpeed = static_cast<int16_t>(enscale<6, 2, true>(ownshipPosition.verticalSpeed * 10)),
+                .course = static_cast<uint16_t>(ownshipPosition.course * 2),
+                .movementStatus = static_cast<uint8_t>(ownshipPosition.groundSpeed > OpenAce::GROUNDSPEED_CONSIDERING_AIRBORN ? 2 : 1), // TODO: Add support for Circling
+                .gnssHorizontalAccuracy = 0b010010,                                                                                     // enscale<3, 2, false>((gpsStats.hDop*2+5)/10),
+                .gnssVerticalAccuracy = 0b01010,                                                                                        // enscale<2, 3, false>((gpsStats.pDop*2+5)/10),
+                .unknownData = 11,
+                .reserved8 = 0};
 
         uint32_t *data = reinterpret_cast<uint32_t *>(&radioPacket);
 
@@ -393,8 +421,7 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
 
         statistics.transmittedAircraftPositions++;
 
-        getBus().receive(OpenAce::RadioTxFrame
-        {
+        getBus().receive(OpenAce::RadioTxFrame{
             Radio::TxPacket{
                 msg.radioParameters,
                 RadioPacket::totalLength,
@@ -408,11 +435,11 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
 OpenAce::AddressType Flarm2024::addressTypeFromFlarm(uint8_t addressType) const
 {
     constexpr etl::array<OpenAce::AddressType, 3> lookupTable =
-    {
-        OpenAce::AddressType::RANDOM, // 0x00
-        OpenAce::AddressType::ICAO,   // 0x01
-        OpenAce::AddressType::FLARM,  // 0x02
-    };
+        {
+            OpenAce::AddressType::RANDOM, // 0x00
+            OpenAce::AddressType::ICAO,   // 0x01
+            OpenAce::AddressType::FLARM,  // 0x02
+        };
     if (addressType > 2)
         return OpenAce::AddressType::RANDOM;
     return lookupTable[addressType];
@@ -421,16 +448,16 @@ OpenAce::AddressType Flarm2024::addressTypeFromFlarm(uint8_t addressType) const
 uint8_t Flarm2024::addressTypeToFlarm(OpenAce::AddressType addressType) const
 {
     constexpr uint8_t lookupTable[] =
-    {
-        0x00, // RANDOM
-        0x01, // ICAO
-        0x02, // FLARM
-        0x00, // OGN (default to 0x00, update if needed)
-        0x00, // FANET (default to 0x00, update if needed)
-        0x00, // ADSL (default to 0x00, update if needed)
-        0x00, // RESERVED (default to 0x00, update if needed)
-        0x00  // UNKNOWN (default to 0x00, update if needed)
-    };
+        {
+            0x00, // RANDOM
+            0x01, // ICAO
+            0x02, // FLARM
+            0x00, // OGN (default to 0x00, update if needed)
+            0x00, // FANET (default to 0x00, update if needed)
+            0x00, // ADSL (default to 0x00, update if needed)
+            0x00, // RESERVED (default to 0x00, update if needed)
+            0x00  // UNKNOWN (default to 0x00, update if needed)
+        };
 
     uint8_t index = static_cast<uint8_t>(addressType) & 0x07;
     return lookupTable[index];

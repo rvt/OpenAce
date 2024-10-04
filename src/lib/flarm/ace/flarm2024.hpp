@@ -32,7 +32,8 @@
 
 
 
-class Flarm2024 : public BaseModule, public etl::message_router<Flarm2024, OpenAce::ConfigUpdatedMsg, OpenAce::RadioRxFrame, OpenAce::OwnshipPositionMsg, OpenAce::RadioTxPositionRequest>
+class Flarm2024 : public BaseModule, public etl::message_router<Flarm2024, OpenAce::ConfigUpdatedMsg, 
+OpenAce::RadioRxFrame, OpenAce::OwnshipPositionMsg, OpenAce::RadioTxPositionRequest>
 {
     friend class message_router;
 
@@ -114,6 +115,7 @@ public:
     {
         int32_t di = config.valueByPath(25000, "Flarm", "distanceIgnore");
         distanceIgnore = std::max((int32_t)0, std::min(di, DEFAULT_IGNORE_DISTANCE));
+        openAceConfiguration = config.openAceConfig();
     }
 
     virtual ~Flarm2024() = default;
@@ -129,22 +131,9 @@ private:
      * Send a FreeRTOS message when a FlarmFrame is received
      * This will release the sender from the task and allow it to continue in a seperate thread
     */
-    void on_receive(const OpenAce::RadioRxFrame &msg)
-    {
-        if (msg.dataSource == OpenAce::DataSource::FLARM)
-        {
-            const OpenAce::RadioRxFrame cpy = msg;
-            if (xQueueSendToBack(frameConsumerQueue, &cpy, TASK_DELAY_MS(5)) != pdPASS )
-            {
-                statistics.queueFull++;
-            }
-        }
-    }
-
-    void on_receive(const OpenAce::OwnshipPositionMsg &msg)
-    {
-        ownshipPosition = msg.position;
-    }
+    void on_receive(const OpenAce::RadioRxFrame &msg);
+    void on_receive(const OpenAce::OwnshipPositionMsg &msg);
+    void on_receive(const OpenAce::ConfigUpdatedMsg &msg);
 
     /**
      * Handle a request to send a Flarm packet.
@@ -152,10 +141,6 @@ private:
      * Only reason to return the packet is to beable to test it.
     */
     const RadioPacket on_receive(const OpenAce::RadioTxPositionRequest &msg);
-
-    void on_receive(const OpenAce::ConfigUpdatedMsg &msg)
-    {
-    }
 
     void on_receive_unknown(const etl::imessage& msg)
     {
