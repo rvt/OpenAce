@@ -37,7 +37,8 @@ class ADSL : public BaseModule, public etl::message_router<ADSL,
     OpenAce::RadioRxFrame,
     OpenAce::OwnshipPositionMsg,
     OpenAce::RadioTxPositionRequest,
-    OpenAce::GpsStatsMsg>
+    OpenAce::GpsStatsMsg,
+    OpenAce::ConfigUpdatedMsg>
 {
     static constexpr int32_t DEFAULT_IGNORE_DISTANCE = 25000;
     static constexpr int32_t MAX_IGNORE_DISTANCE = 50000;
@@ -88,6 +89,7 @@ public:
     {
         int32_t v = config.valueByPath(25000, "ADSL", "distanceIgnore");
         distanceIgnore = std::max((int32_t)0, std::min(v, MAX_IGNORE_DISTANCE));
+        openAceConfiguration = config.openAceConfig();
     }
 
     virtual ~ADSL() = default;
@@ -102,23 +104,11 @@ private:
      * Send a FreeRTOS message when a ADSL is received
      * This will release the sender from the task and allow it to continue in a seperate thread
     */
-    void on_receive(const OpenAce::RadioRxFrame &msg)
-    {
-        if (msg.dataSource == OpenAce::DataSource::ADSL)
-        {
-            const OpenAce::RadioRxFrame cpy = msg;
-            if (xQueueSendToBack(frameConsumerQueue, &cpy, TASK_DELAY_MS(5)) != pdPASS )
-            {
-                statistics.queueFullErr++;
-            }
-        }
-    }
-
+    void on_receive(const OpenAce::RadioRxFrame &msg);
     void on_receive(const OpenAce::OwnshipPositionMsg &msg);
     void on_receive(const OpenAce::RadioTxPositionRequest &msg);
     void on_receive(const OpenAce::GpsStatsMsg &msg);
-
-
+    void on_receive(const OpenAce::ConfigUpdatedMsg &msg);
     void on_receive_unknown(const etl::imessage& msg)
     {
     }

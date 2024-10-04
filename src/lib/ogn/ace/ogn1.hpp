@@ -34,12 +34,8 @@
 
 #include "ognpacket.hpp"
 
-
-
-
-
 class Ogn1 : public BaseModule, public etl::message_router<Ogn1, OpenAce::RadioRxFrame, OpenAce::OwnshipPositionMsg,
-    OpenAce::RadioTxPositionRequest, OpenAce::BarometricPressure, OpenAce::GpsStatsMsg>
+    OpenAce::RadioTxPositionRequest, OpenAce::BarometricPressure, OpenAce::GpsStatsMsg, OpenAce::ConfigUpdatedMsg>
 {
     static constexpr int32_t DEFAULT_IGNORE_DISTANCE = 25000;
     static constexpr int32_t MAX_IGNORE_DISTANCE = 50000;
@@ -72,6 +68,7 @@ class Ogn1 : public BaseModule, public etl::message_router<Ogn1, OpenAce::RadioR
 
     TaskHandle_t taskHandle;
     QueueHandle_t frameConsumerQueue;
+    OpenAce::AircraftAddress ownshipAddress;
     OpenAce::OwnshipPositionInfo ownshipPosition;
     OpenAce::Config::OpenAceConfiguration openAceConfiguration;
     OpenAce::BarometricPressure lastBarometricPressure;
@@ -84,10 +81,12 @@ public:
         BaseModule(bus, NAME),
         taskHandle(nullptr),
         frameConsumerQueue(nullptr),
+        ownshipAddress(0x000000),
         ownshipPosition()
     {
         int32_t v = config.valueByPath(25000, "Ogn1", "distanceIgnore");
         distanceIgnore = std::max((int32_t)0, std::min(v, MAX_IGNORE_DISTANCE));
+        openAceConfiguration = config.openAceConfig();
     }
 
     virtual ~Ogn1() = default;
@@ -108,6 +107,7 @@ private:
     void on_receive(const OpenAce::GpsStatsMsg &msg);
     void on_receive(const OpenAce::RadioTxPositionRequest &msg);
     void on_receive_unknown(const etl::imessage& msg);
+    void on_receive(const OpenAce::ConfigUpdatedMsg &msg);
 
     // Transform a Ogn addressType to an openAce address type
     OpenAce::AddressType addressTypeFromOgn(uint8_t addressType) const;

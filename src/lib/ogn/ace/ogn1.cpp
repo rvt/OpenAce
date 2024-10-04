@@ -3,6 +3,7 @@
 #include "ogn1.hpp"
 #include "ognpacket.hpp"
 #include "ace/bitcount.hpp"
+#include "etl/algorithm.h"
 
 constexpr float POSITION_DECODE = 0.0001f / 60.f;
 constexpr float POSITION_ENDECODE = 1.f / POSITION_DECODE;
@@ -118,19 +119,12 @@ uint8_t Ogn1::errorCorrect(uint8_t *output, uint8_t *data, uint8_t *err, uint8_t
     do                                                   // more loops is more chance to recover the packet
     {
         check = decoder.ProcessChecks(); // do an iteration
-    }
-    while ((iter--) && check);   // if FEC all fine: break
+    } while ((iter--) && check); // if FEC all fine: break
     decoder.Output(output); // get corrected bytes into the OGN packet
     errCount += ErrCount(output, data, err, OGN_PACKET_LENGTH);
 
-    if (errCount > 15)
-    {
-        errCount = 15;
-    }
-    if (check > 15)
-    {
-        check = 15;
-    }
+    errCount = etl::min(errCount, (uint8_t)15);
+    check = etl::min(check, (uint8_t)15);
     return (check & 0x0F) | (errCount << 4);
 }
 
@@ -139,19 +133,12 @@ OpenAce::AddressType Ogn1::addressTypeFromOgn(uint8_t addressType) const
     switch (addressType)
     {
     case 0x03:
-        //  statistics.addressTypeOgn++;
         return OpenAce::AddressType::OGN;
     case 0x02:
-        //    statistics.addressTypeFlarm++;
         return OpenAce::AddressType::FLARM;
     case 0x01:
-        //    statistics.addressTypeICAO++;
         return OpenAce::AddressType::ICAO;
-    case 0x00:
-    //    statistics.addressTypeRandom++;
-    // Not a bug, if we don't the the type we just say random
     default:
-        //    statistics.addressTypeErr++;
         return OpenAce::AddressType::RANDOM;
     }
 }
@@ -159,16 +146,16 @@ OpenAce::AddressType Ogn1::addressTypeFromOgn(uint8_t addressType) const
 uint8_t Ogn1::addressTypeToOgn(OpenAce::AddressType addressType) const
 {
     constexpr uint8_t lookupTable[] =
-    {
-        0x00, // RANDOM
-        0x01, // ICAO
-        0x02, // FLARM
-        0x03, // OGN (default to 0x00, update if needed)
-        0x00, // FANET (default to 0x00, update if needed)
-        0x00, // ADSL (default to 0x00, update if needed)
-        0x00, // RESERVED (default to 0x00, update if needed)
-        0x00  // UNKNOWN (default to 0x00, update if needed)
-    };
+        {
+            0x00, // RANDOM
+            0x01, // ICAO
+            0x02, // FLARM
+            0x03, // OGN (default to 0x00, update if needed)
+            0x00, // FANET (default to 0x00, update if needed)
+            0x00, // ADSL (default to 0x00, update if needed)
+            0x00, // RESERVED (default to 0x00, update if needed)
+            0x00  // UNKNOWN (default to 0x00, update if needed)
+        };
 
     uint8_t index = static_cast<uint8_t>(addressType) & 0x07;
     return lookupTable[index];
@@ -201,10 +188,11 @@ int8_t Ogn1::parseFrame(OGN1_Packet &packet, int16_t rssiDbm)
     statistics.receivedAircraftPositions++;
     int16_t speed0d1ms = packet.DecodeSpeed();
 
-    char icaoAddress[7];
-    sprintf(icaoAddress, "%.6X", packet.Header.Address);
-    OpenAce::AircraftPositionMsg aircraftPosition
-    {
+    OpenAce::IcaoAddress icaoAddress;
+    etl::string_stream stream(icaoAddress);
+    stream << etl::hex << packet.Header.Address;
+    
+    OpenAce::AircraftPositionMsg aircraftPosition{
         OpenAce::AircraftPositionInfo{
             positionTs,
             icaoAddress,
@@ -218,15 +206,15 @@ int8_t Ogn1::parseFrame(OGN1_Packet &packet, int16_t rssiDbm)
             fLatitude,
             fLongitude,
             packet.DecodeAltitude(),        // relative to WGS84 ellipsoid
-                  packet.DecodeClimbRate() * .1f, // Clibrate is send s 0.1m/s (10 means 1/ms)
-                  speed0d1ms * .1f,
-                  static_cast<int16_t>(packet.DecodeHeading() * .1f),
-                  packet.DecodeTurnRate() * .1f,
-                  0.0f,
-                  static_cast<uint16_t>(fromOwn.distance),
-                  fromOwn.relNorth,
-                  fromOwn.relEast,
-                  fromOwn.bearing},
+            packet.DecodeClimbRate() * .1f, // Climbrate is send s 0.1m/s (10 means 1/ms)
+            speed0d1ms * .1f,
+            static_cast<int16_t>(packet.DecodeHeading() * .1f),
+            packet.DecodeTurnRate() * .1f,
+            0.0f,
+            static_cast<uint16_t>(fromOwn.distance),
+            fromOwn.relNorth,
+            fromOwn.relEast,
+            fromOwn.bearing},
         rssiDbm};
     getBus().receive(aircraftPosition);
     return 0;
@@ -237,17 +225,16 @@ void Ogn1::on_receive(const OpenAce::RadioTxPositionRequest &msg)
     if (msg.radioParameters.config.dataSource == OpenAce::DataSource::OGN1)
     {
         OGN1_Packet packet;
-
         packet.Header =
-        {
-            .Address = openAceConfiguration.address, // Address
-            .AddrType = addressTypeToOgn(openAceConfiguration.addressType),
-            .NonPos = 0,    // 0 = position packet, 1 = other information like status
-            .Parity = 0,    // parity takes into account bits 0..27 thus only the 28 lowest bits
-            .Relay = 0,     // 0 = direct packet, 1 = relayed once, 2 = relayed twice, ...
-            .Encrypted = 0, // packet is encrypted
-            .Emergency = 0, // aircraft in emergency (not used for now)
-        };
+            {
+                .Address = openAceConfiguration.address, // Address
+                .AddrType = addressTypeToOgn(openAceConfiguration.addressType),
+                .NonPos = 0,    // 0 = position packet, 1 = other information like status
+                .Parity = 0,    // parity takes into account bits 0..27 thus only the 28 lowest bits
+                .Relay = 0,     // 0 = direct packet, 1 = relayed once, 2 = relayed twice, ...
+                .Encrypted = 0, // packet is encrypted
+                .Emergency = 0, // aircraft in emergency (not used for now)
+            };
 
         packet.calcAddrParity();
 
@@ -290,15 +277,12 @@ void Ogn1::on_receive(const OpenAce::RadioTxPositionRequest &msg)
         LDPC_Encode(packet.Word());
         statistics.transmittedAircraftPositions++;
 
-        getBus().receive(OpenAce::RadioTxFrame
-        {
+        getBus().receive(OpenAce::RadioTxFrame{
             Radio::TxPacket{
                 msg.radioParameters,
                 OGN_PACKET_LENGTH_FEC,
-                &packet
-            },
-            msg.radioNo
-        });
+                &packet},
+            msg.radioNo});
         // printf("OGN request position\n");
     }
 }
@@ -325,6 +309,11 @@ void Ogn1::ognReceiveTask(void *arg)
             if (packet.Header.Encrypted)
             {
                 ogn1->statistics.encrypted++;
+                continue;
+            }
+
+            // Ignore ownship address
+            if (packet.Header.Address == ogn1->openAceConfiguration.address) {
                 continue;
             }
 
@@ -361,6 +350,15 @@ void Ogn1::on_receive(const OpenAce::GpsStatsMsg &msg)
 {
     gpsStats = msg;
 }
+
+void Ogn1::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
+{
+    if (msg.moduleName == "config")
+    {
+        openAceConfiguration = msg.config.openAceConfig();
+    }
+}
+
 void Ogn1::on_receive_unknown(const etl::imessage &msg)
 {
 }

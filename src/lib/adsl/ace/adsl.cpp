@@ -4,14 +4,14 @@
 #include "ace/bitcount.hpp"
 #include "ace/utils.hpp"
 
-constexpr float POSITION_DECODE = 0.0001f/60.f;
-constexpr float POSITION_ENDECODE = 1.f/POSITION_DECODE;
+constexpr float POSITION_DECODE = 0.0001f / 60.f;
+constexpr float POSITION_ENDECODE = 1.f / POSITION_DECODE;
 
 OpenAce::PostConstruct ADSL::postConstruct()
 {
-//    BaseModule::moduleByName(*this, Tuner::NAME);
+    //    BaseModule::moduleByName(*this, Tuner::NAME);
 
-    frameConsumerQueue = xQueueCreate( 4, sizeof( OpenAce::RadioRxFrame ) );
+    frameConsumerQueue = xQueueCreate(4, sizeof(OpenAce::RadioRxFrame));
     if (frameConsumerQueue == nullptr)
     {
         return OpenAce::PostConstruct::XQUEUE_ERROR;
@@ -22,7 +22,7 @@ OpenAce::PostConstruct ADSL::postConstruct()
 
 void ADSL::start()
 {
-    xTaskCreate(adslReceiveTask, "adslReceiveTask", configMINIMAL_STACK_SIZE+1024, this, tskIDLE_PRIORITY, &taskHandle);
+    xTaskCreate(adslReceiveTask, "adslReceiveTask", configMINIMAL_STACK_SIZE + 1024, this, tskIDLE_PRIORITY, &taskHandle);
     // auto tuner = static_cast<Tuner*>(BaseModule::moduleByName(*this, Tuner::NAME));
     // tuner->startListen(OpenAce::DataSource::ADSL);
     getBus().subscribe(*this);
@@ -38,12 +38,10 @@ void ADSL::stop()
     vQueueDelete(frameConsumerQueue);
 };
 
-
-
 void ADSL::getData(etl::string_stream &stream, const etl::string_view optional) const
 {
     stream << "{";
-    for(const auto &stat : dataSourceTimeStats)
+    for (const auto &stat : dataSourceTimeStats)
     {
         stream << "\"f" << stat.frequency << "\":\"" << stat.timeTenthMs.to_string() << "\",\n";
     }
@@ -66,7 +64,7 @@ void ADSL::getData(etl::string_stream &stream, const etl::string_view optional) 
 
 void ADSL::addReceiveStat(uint32_t frequency)
 {
-    auto msInSec = 99-CoreUtils::msInSecond() / 10;
+    auto msInSec = 99 - CoreUtils::msInSecond() / 10;
     for (auto &stat : dataSourceTimeStats)
     {
         if (stat.frequency == frequency)
@@ -85,14 +83,34 @@ void ADSL::addReceiveStat(uint32_t frequency)
         dataSourceTimeStats.back().timeTenthMs.set(msInSec);
     }
 }
+void ADSL::on_receive(const OpenAce::RadioRxFrame &msg)
+{
+    if (msg.dataSource == OpenAce::DataSource::ADSL)
+    {
+        const OpenAce::RadioRxFrame cpy = msg;
+        if (xQueueSendToBack(frameConsumerQueue, &cpy, TASK_DELAY_MS(5)) != pdPASS)
+        {
+            statistics.queueFullErr++;
+        }
+    }
+}
 
 void ADSL::on_receive(const OpenAce::OwnshipPositionMsg &msg)
 {
     ownshipPosition = msg.position;
 }
+
 void ADSL::on_receive(const OpenAce::GpsStatsMsg &msg)
 {
     gpsStats = msg;
+}
+
+void ADSL::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
+{
+    if (msg.moduleName == "config")
+    {
+        openAceConfiguration = msg.config.openAceConfig();
+    }
 }
 
 OpenAce::AddressType ADSL::addressMapToAddressType(uint8_t addressMap) const
@@ -147,7 +165,6 @@ uint8_t ADSL::addressTypeToAddressMap(OpenAce::AddressType addressType)
         return 0x00;
     }
 }
-
 
 OpenAce::AircraftCategory ADSL::mapAircraftCategory(ADSL_Packet::AircraftCategory category)
 {
@@ -217,7 +234,6 @@ ADSL_Packet::AircraftCategory ADSL::mapAircraftCategory(OpenAce::AircraftCategor
     }
 }
 
-
 void ADSL::on_receive(const OpenAce::RadioTxPositionRequest &msg)
 {
 
@@ -230,7 +246,7 @@ void ADSL::on_receive(const OpenAce::RadioTxPositionRequest &msg)
         packet.reserved1 = 0;
         packet.relay = 0;
         packet.timeStamp = (CoreUtils::msSinceEpoch() / 250) % 60;
-        packet.flightState = ownshipPosition.airborne?ADSL_Packet::FlightState::FS_Airborne:ADSL_Packet::FlightState::FS_OnGround;
+        packet.flightState = ownshipPosition.airborne ? ADSL_Packet::FlightState::FS_Airborne : ADSL_Packet::FlightState::FS_OnGround;
         packet.arcraftCategory = mapAircraftCategory(openAceConfiguration.category);
         packet.emergencyStatus = ADSL_Packet::ES_NoEmergency;
 
@@ -243,22 +259,19 @@ void ADSL::on_receive(const OpenAce::RadioTxPositionRequest &msg)
 
         packet.designAssurance = ADSL_Packet::DesignAsurance::DA_None;
         packet.navigationIntegrity = ADSL_Packet::NavigationIntegrity::NI_LessThan25m;
-        packet.setHorAccur((gpsStats.hDop*2+5)/10);
-        packet.setVerAccur((gpsStats.pDop*3+5)/10);
+        packet.setHorAccur((gpsStats.hDop * 2 + 5) / 10);
+        packet.setVerAccur((gpsStats.pDop * 3 + 5) / 10);
         packet.reserved2 = 0;
 
         packet.Scramble();
         packet.setCRC();
 
-        getBus().receive(OpenAce::RadioTxFrame
-        {
+        getBus().receive(OpenAce::RadioTxFrame{
             Radio::TxPacket{
                 msg.radioParameters,
                 ADSL_Packet::TxBytes,
-                (const void *)(&packet)
-            },
-            msg.radioNo
-        });
+                (const void *)(&packet)},
+            msg.radioNo});
         statistics.transmittedAircraftPositions++;
     }
 }
@@ -269,7 +282,7 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
 
     float fLatitude = packet.getLatitude();
     float fLongitude = packet.getLongitude();
-    auto fromOwn = CoreUtils::getDistanceRelNorthRelEastInt( ownshipPosition.lat, ownshipPosition.lon, fLatitude, fLongitude);
+    auto fromOwn = CoreUtils::getDistanceRelNorthRelEastInt(ownshipPosition.lat, ownshipPosition.lon, fLatitude, fLongitude);
 
     if (fromOwn.distance > distanceIgnore)
     {
@@ -281,10 +294,8 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
     etl::string_stream stream(icaoAddress);
     stream << etl::hex << packet.address;
 
-    OpenAce::AircraftPositionMsg aircraftPosition
-    {
-        OpenAce::AircraftPositionInfo
-        {
+    OpenAce::AircraftPositionMsg aircraftPosition{
+        OpenAce::AircraftPositionInfo{
             positionTs,
             icaoAddress,
             packet.address,
@@ -293,22 +304,20 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
             static_cast<OpenAce::AircraftCategory>(packet.arcraftCategory),
             packet.addressMapping == 0x00,
             false,
-            packet.flightState == ADSL_Packet::FlightState::FS_Airborne,   // airBorn
+            packet.flightState == ADSL_Packet::FlightState::FS_Airborne, // airBorn
             fLatitude,
             fLongitude,
-            packet.getAltitudeWGS84(),                            // relative to WGS84 ellipsoid
-                  packet.getVerticalRate(),
-                  packet.getGroundSpeed(),
-                  static_cast<int16_t>(packet.getTrack()),
-                  0.0,
-                  0.0f,
-                  static_cast<uint16_t>(fromOwn.distance),
-                  fromOwn.relNorth,
-                  fromOwn.relEast,
-                  fromOwn.bearing
-        },
-        rssiDbm
-    };
+            packet.getAltitudeWGS84(), // relative to WGS84 ellipsoid
+            packet.getVerticalRate(),
+            packet.getGroundSpeed(),
+            static_cast<int16_t>(packet.getTrack()),
+            0.0,
+            0.0f,
+            static_cast<uint16_t>(fromOwn.distance),
+            fromOwn.relNorth,
+            fromOwn.relEast,
+            fromOwn.bearing},
+        rssiDbm};
     statistics.receivedAircraftPositions++;
     getBus().receive(aircraftPosition);
     return 0;
@@ -316,7 +325,7 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
 
 void ADSL::adslReceiveTask(void *arg)
 {
-    ADSL *adsl = static_cast<ADSL*>(arg);
+    ADSL *adsl = static_cast<ADSL *>(arg);
     ADSL_Packet packet;
     OpenAce::RadioRxFrame msg;
     while (true)
@@ -324,8 +333,8 @@ void ADSL::adslReceiveTask(void *arg)
         // msg length expected to be 0x1b == 25byte
         if (xQueueReceive(adsl->frameConsumerQueue, &msg, portMAX_DELAY) == pdPASS)
         {
-            uint8_t check = ADSL_Packet::Correct( (uint8_t *)msg.frame+1, (uint8_t *)msg.err+1); // +1 because the length is not part of the CRC calculations
-            if (check & 0x0F)
+            auto check = ADSL_Packet::Correct((uint8_t *)msg.frame + 1, (uint8_t *)msg.err + 1); // +1 because the length is not part of the CRC calculations
+            if (check == -1)
             {
                 adsl->statistics.fecErr++;
                 continue;
@@ -336,6 +345,11 @@ void ADSL::adslReceiveTask(void *arg)
             if (packet.key != 0)
             {
                 adsl->statistics.encrypted++;
+                continue;
+            }
+
+            // Ignore ownship address
+            if (packet.address == adsl->openAceConfiguration.address) {
                 continue;
             }
 
