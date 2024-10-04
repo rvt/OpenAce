@@ -313,7 +313,7 @@ const OpenAce::Config::OpenAceConfiguration Config::openAceConfig() const
     JsonObjectConst aircraftConfig = doc["aircraft"][aircraft];
 
     // Default if no aircraft config was found
-    etl::vector<OpenAce::DataSource, 6> protocols;
+    etl::vector<OpenAce::DataSource, static_cast<uint8_t>(OpenAce::DataSource::_TRANSPROTOCOLS)> protocols;
     if (aircraftConfig.isNull())
     {
         return

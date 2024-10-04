@@ -60,7 +60,7 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, OpenAce::RadioTx
         uint32_t txTimeout = 0;
         uint32_t txOk = 0;
         Radio::Mode mode=Radio::Mode::NONE;
-        OpenAce::DataSource dataSource=OpenAce::DataSource::UNKNOWN;
+        OpenAce::DataSource dataSource=OpenAce::DataSource::NONE;
         uint32_t frequency=0;
         int8_t powerdBm=-100;
     } statistics;

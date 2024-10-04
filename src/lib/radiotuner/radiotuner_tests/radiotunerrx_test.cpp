@@ -17,7 +17,7 @@ TEST_CASE("RadioProtocolCtx", "[single-file]")
 {
     RadioProtocolCtx ctx{nullptr, nullptr};
 
-    etl::array<uint8_t, (uint8_t)OpenAce::DataSource::_MAXRADIO> slotReceived = {};
+    etl::array<uint8_t, (uint8_t)OpenAce::DataSource::_TRANSPROTOCOLS> slotReceived = {};
 
     ctx.updateDataSources(etl::vector<OpenAce::DataSource, 1> {});
     ctx.prioritizeDatasources();

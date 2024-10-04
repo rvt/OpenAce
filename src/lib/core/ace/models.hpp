@@ -151,12 +151,11 @@ namespace OpenAce
         FANET = 2,
         OGN1 = 3,
         PAW = 4,
-        _MAXRADIO = 5, // Indicate maximum RADIO that can be received over low power (868MHZ etc..) used to limit array sizes
+        _TRANSPROTOCOLS = 5, // Indicate maximum RADIO that can be received over low power (868MHZ etc..) used to limit array sizes
         MODES = 6,
         ADSB = 8,
         NONE = 9,
-        SELF = 10, // Position source is from a local GPS
-        UNKNOWN = 11
+        _ITEMS = 10   // Maximum number of items eg last item + 1
     };
 
     // Get a string representation of a datasource
@@ -248,7 +247,7 @@ namespace OpenAce
             AircraftAddress address;
             bool stealth;
             bool noTrack;
-            etl::vector<DataSource, 6> protocols;
+            etl::vector<DataSource, static_cast<uint8_t>(OpenAce::DataSource::_TRANSPROTOCOLS)> protocols;
         };
 
         /**

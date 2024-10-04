@@ -62,9 +62,7 @@ namespace OpenAce
         {DataSource::ADSB, "ADSB"},
         {DataSource::MODES, "MODES"},
         {DataSource::OGN1, "OGN"},
-        {DataSource::PAW, "PAW"},
-        {DataSource::SELF, "SELF"},
-        {DataSource::UNKNOWN, "UNKNOWN"}
+        {DataSource::PAW, "PAW"}
     };
     constexpr Mapping<DataSource, const char *> dataSourceMappings2[] =
     {
@@ -75,9 +73,7 @@ namespace OpenAce
         {DataSource::ADSB, "A"},
         {DataSource::MODES, "M"},
         {DataSource::OGN1, "O"},
-        {DataSource::PAW, "P"},
-        {DataSource::SELF, "S"},
-        {DataSource::UNKNOWN, "U"}
+        {DataSource::PAW, "P"}
     };
 
     const char *dataSourceToString(DataSource ds)

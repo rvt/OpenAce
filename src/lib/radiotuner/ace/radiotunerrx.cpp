@@ -11,12 +11,12 @@
 OpenAce::PostConstruct RadioTunerRx::postConstruct()
 {
     moduleByName(*this, Radio::NAMES[0]);
-    numRadios = 1;
+    uint8_t numRadios = 1;
     if (moduleByName(*this, Radio::NAMES[1], false))
     {
         numRadios++;
     }
-    addRadioTasks();
+    addRadioTasks(numRadios);
     return OpenAce::PostConstruct::OK;
 }
 
@@ -50,7 +50,7 @@ void RadioTunerRx::stop()
 /**
  * Create a tune task per radio
  */
-void RadioTunerRx::addRadioTasks()
+void RadioTunerRx::addRadioTasks(uint8_t numRadios)
 {
     for (uint8_t radioNo = 0; radioNo < numRadios; radioNo++)
     {
@@ -103,7 +103,7 @@ void RadioTunerRx::radioTuneTask(void *arg)
 {
     constexpr uint16_t TIMEOUT_DELAY = 2'000;
     RadioTunerRx::RadioProtocolCtx *taskCtx = static_cast<RadioTunerRx::RadioProtocolCtx *>(arg);
-    bool blocked = false;
+    bool taskBlock = false;
     while (true)
     {
         uint32_t notifyValue = ulTaskNotifyTake(pdTRUE, TASK_DELAY_MS(TIMEOUT_DELAY));
@@ -114,14 +114,14 @@ void RadioTunerRx::radioTuneTask(void *arg)
         }
         else if (notifyValue & TaskState::BLOCK)
         {
-            blocked = true;
+            taskBlock = true;
         }
         else if (notifyValue & TaskState::UNBLOCK)
         {
-            blocked = false;
+            taskBlock = false;
         }
 
-        if (blocked)
+        if (taskBlock)
         {
             continue;
         }
@@ -135,8 +135,7 @@ void RadioTunerRx::radioTuneTask(void *arg)
 
                 // Send a message to the radio to indicate to switch and listen to a different protocol
                 taskCtx->radio->rxMode(
-                {
-                    Radio::RadioParameters{
+                    {Radio::RadioParameters{
                         nextTimeSlot.radioConfig,
                         frequency,
                         nextTimeSlot.frequency.powerdBm}});
@@ -161,11 +160,12 @@ void RadioTunerRx::radioTuneTask(void *arg)
 
 void RadioTunerRx::on_receive(const OpenAce::OwnshipPositionMsg &msg)
 {
-    static uint16_t checkEvery = 0;
-    // Update ZONE every 30 seconds
-    if (currentZone == CountryRegulations::Zone::ZONE0 || checkEvery++ > (OPENACE_GPS_FREQUENCY * 30))
+    static uint32_t lastTime = CoreUtils::msSinceBoot();
+    auto msSinceBoot = CoreUtils::msSinceBoot();
+    // Update ZONE every 30 seconds, or when still at ZONE0
+    if (currentZone == CountryRegulations::Zone::ZONE0 || CoreUtils::msElapsed(lastTime, msSinceBoot) > 30000)
     {
-        checkEvery = 0;
+        lastTime = msSinceBoot;
         currentZone = CountryRegulations::zone(msg.position.lat, msg.position.lon);
     }
 }
@@ -175,9 +175,11 @@ void RadioTunerRx::on_receive(const OpenAce::AircraftPositionMsg &msg)
     static uint32_t lastTime = CoreUtils::msSinceBoot();
     slotReceive[(uint8_t)msg.position.dataSource]++;
 
-    // Update the tasks at least every seconds, but not on each and every received message
-    if (CoreUtils::msElapsed(lastTime) > 1000)
+    // Update the tasks at least every seconds, but not on each and every aircraft message
+    auto msSinceBoot = CoreUtils::msSinceBoot();
+    if (CoreUtils::msElapsed(lastTime, msSinceBoot) > 1000)
     {
+        lastTime = msSinceBoot;
         for (auto &taskCtx : radioTasks)
         {
             taskCtx.updateSlotReceive(slotReceive);
@@ -200,15 +202,43 @@ void RadioTunerRx::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
 
 void RadioTunerRx::enableDisableDatasources(const etl::ivector<OpenAce::DataSource> &dataSources)
 {
+    // Step 1: Block all tasks first
     for (auto &taskCtx : radioTasks)
     {
         xTaskNotify(taskCtx.taskHandle, TaskState::BLOCK, eSetBits);
     }
-    // TODO: Sink the tasks somehow instead of just waiting
-    vTaskDelay(TASK_DELAY_MS(50));
+
+    // TODO: Synchronize task blocking here instead of fixed delay
+    vTaskDelay(TASK_DELAY_MS(50)); // This delay could be replaced with a synchronization mechanism
+
+    // Step 2: Precompute how many protocols each radio should handle
+    uint8_t dsPerRadio = dataSources.size() / radioTasks.size();
+    uint8_t remainingSources = dataSources.size() % radioTasks.size(); // Handle remainder for last radio
+    uint8_t newDsPos = 0;
+
+    // Step 3: Distribute data sources across radios
     for (auto &taskCtx : radioTasks)
     {
-        taskCtx.updateDataSources(dataSources);
+        uint8_t sourcesForThisRadio = dsPerRadio;
+
+        // Distribute the remainder to the last radio
+        if (&taskCtx == &radioTasks.back())
+        {
+            sourcesForThisRadio += remainingSources;
+        }
+
+        // Copy the assigned data sources for this radio
+        etl::vector<OpenAce::DataSource, MAX_SOURCE_PER_RADIO> newDataSources;
+        for (uint8_t i = 0; i < sourcesForThisRadio; ++i)
+        {
+            newDataSources.emplace_back(dataSources[newDsPos]);
+            newDsPos++;
+        }
+
+        // Step 4: Update task with new data sources
+        taskCtx.updateDataSources(newDataSources);
+
+        // Unblock the task
         xTaskNotify(taskCtx.taskHandle, TaskState::UNBLOCK, eSetBits);
     }
 }

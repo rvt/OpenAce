@@ -33,7 +33,7 @@
  */
 class RadioTunerRx : public BaseModule, public etl::message_router<RadioTunerRx, OpenAce::OwnshipPositionMsg, OpenAce::AircraftPositionMsg, OpenAce::ConfigUpdatedMsg>
 {
-
+    using  SlotReceive = etl::array<uint8_t, static_cast<uint8_t>(OpenAce::DataSource::_ITEMS)>;
 public:
     static constexpr const uint32_t UPDATE_ZONE_REGULATION_EVERY = 30000; // Get new regulatory dataset every XXms
     static constexpr const size_t   MAX_SLOTS_PER_SOURCE = 3;             // Maximum slots a datasource can get while receiving
@@ -68,8 +68,8 @@ private:
         // Data of the upcoming timeslot set by advanceReceiveSlot
         uint8_t upcomingTimeslot = CountryRegulations::NONE_DATASOURCE.idx;
 
-        etl::array<uint8_t, (uint8_t)OpenAce::DataSource::_MAXRADIO> slotReceive = {};
-        etl::array<uint8_t, (uint8_t)OpenAce::DataSource::_MAXRADIO> previousReceived = {};
+        SlotReceive slotReceive = {};
+        SlotReceive previousReceived = {};
 
         // Constructor
         RadioProtocolCtx(RadioTunerRx *controller_, Radio *radio_) : controller(controller_), radio(radio_), taskHandle(nullptr), timerHandle(nullptr)
@@ -103,7 +103,7 @@ private:
          * Update the receive counts, this works as an incremental counter (8 bit) where the differences between the last received and the current
          * will be calculate to know if any data was received
          */
-        void updateSlotReceive(const etl::array<uint8_t, (uint8_t)OpenAce::DataSource::_MAXRADIO> &sr)
+        void updateSlotReceive(const SlotReceive &sr)
         {
             // Update slotReceive with the difference between sr and previousReceived
             for (size_t i = 0; i < slotReceive.size(); ++i)
@@ -121,6 +121,7 @@ private:
         {
             dataSources.clear();
             dataSources.assign(ds.cbegin(), ds.cend());
+            prioritizeDatasources();
         }
 
         /**
@@ -206,7 +207,7 @@ private:
     };
 
     // Keep track if there is any traffic on the datasources
-    etl::array<uint8_t, (uint8_t)OpenAce::DataSource::_MAXRADIO> slotReceive;
+    SlotReceive slotReceive;
 
     // Keep track of one task per each radio
     etl::list<RadioProtocolCtx, OPEN_ACE_MAX_RADIOS> radioTasks;
@@ -224,7 +225,7 @@ private:
 
     // Current zone we are flying in
     volatile CountryRegulations::Zone currentZone;
-    uint8_t numRadios;
+
 
 private:
     static void timerTuneCallback(TimerHandle_t xTimer);
@@ -240,8 +241,7 @@ public:
     static constexpr const etl::string_view NAME = "RadioTunerRx";
 
     RadioTunerRx(etl::imessage_bus &bus, const Configuration &config) : BaseModule(bus, NAME),
-        currentZone(CountryRegulations::Zone::ZONE0),
-        numRadios(0)
+        currentZone(CountryRegulations::Zone::ZONE0)
     {
     }
     virtual ~RadioTunerRx() = default;
@@ -250,7 +250,7 @@ public:
     virtual void start() override;
     virtual void stop() override;
     virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
-    void addRadioTasks();
+    void addRadioTasks(uint8_t numRadios);
 
 private:
     void enableDisableDatasources(const etl::ivector<OpenAce::DataSource> &datasources);
