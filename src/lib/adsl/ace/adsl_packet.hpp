@@ -127,12 +127,15 @@ public:
 
 
 public:
-    static constexpr uint8_t TxBytes=25;
+#pragma pack(push, 1)
+    static constexpr uint8_t TotalTxBytes=25;
     // 2Byte
-    uint16_t ALLIGN;          // two bytes for correct alignment: can contain the last two SYNC bytes
+    uint16_t ALLIGN;        // two bytes for correct alignment for the Word to allow XXTEA_Encrypt_Key0(..) be allign on word boundery
 
-    // 2Byte
+    // 1Byte
     uint8_t length;         // [bytes] Packet length excluding this byte and SYNC but including sCRC, eg everything after this byte
+
+    // 1 Byte
     union
     {
         uint8_t header;
@@ -156,9 +159,9 @@ public:
             uint32_t address:24;
             uint8_t reserved1:1;
             uint8_t relay:1;
-            uint8_t timeStamp: 6; // 0.25sec secon
+            uint8_t timeStamp: 6;      // 0.25sec second
             FlightState flightState: 2;
-            AircraftCategory arcraftCategory: 5;
+            AircraftCategory aircraftCategory: 5;
             EmergencyStatus emergencyStatus: 3;
             int32_t latitude: 24;
             int32_t longitude: 24;
@@ -178,11 +181,11 @@ public:
     // 3 Byte
     uint8_t CRC[3];           // 24-bit (is aligned to 32-bit)
     //uint32_t CRC2;           // 24-bit (is aligned to 32-bit)
-
+#pragma pack(pop)
 
 public:
     ADSL_Packet() :
-        /*SYNC(0x4B72),*/ length(TxBytes - 1), version(0), signature(0), key(0), reserved(0) //  Length is from Version
+        /*SYNC(0x4B72),*/ length(24), version(0), signature(0), key(0), reserved(0) //  Length is from Version
     {
         Word[0] = 0;
         Word[1] = 0;
@@ -206,7 +209,7 @@ public:
     }
     void setCRC(void)
     {
-        uint32_t Word = calcPI((const uint8_t *)&header, length - 3);
+        uint32_t Word = calcPI((const uint8_t *)&header, 21);
         CRC[0]=Word>>16;
         CRC[1]=Word>>8;
         CRC[2]=Word;
@@ -326,10 +329,10 @@ private:
     /****************************************************************/
     uint32_t checkCRC(void) const
     {
-        return checkPI((const uint8_t *)&header, TxBytes - 1);
+        return checkPI((const uint8_t *)&header, 24);
     }
 
-    static constexpr float FNTtoFloatConf = 90.0007295677/0x40000000;                       // FANET cordic conversion factor (not exactly cordic)
+    static constexpr float FNTtoFloatConf = 90.0007295677/0x40000000;  // FANET cordic conversion factor (not exactly cordic)
     static float FNTtoFloat(int32_t Coord)                             // convert from FANET cordic units to float degrees
     {
         return FNTtoFloatConf * Coord;
@@ -390,7 +393,7 @@ private:
 
     static uint32_t CRCsyndrome(uint8_t Bit)
     {
-        const uint16_t PacketBytes = TxBytes-3;
+        const uint16_t PacketBytes = 24;
         const uint16_t PacketBits = PacketBytes*8;
         const uint32_t Syndrome[PacketBits] =
         {
@@ -424,7 +427,7 @@ private:
 
     static uint8_t FindCRCsyndrome(uint32_t Syndr)              // quick search for a single-bit CRC syndrome
     {
-        const uint16_t PacketBytes = TxBytes-3;
+        const uint16_t PacketBytes = 24;
         const uint16_t PacketBits = PacketBytes*8;
         const uint32_t Syndrome[PacketBits] =
         {
@@ -471,7 +474,7 @@ private:
 
     static int Correct_(uint8_t *PktData, uint8_t *PktErr, const int MaxBadBits=6) // correct the manchester-decoded packet with dead/weak bits marked
     {
-        const int Bytes=ADSL_Packet::TxBytes - 1;
+        const int Bytes=24;
         uint32_t CRC = checkPI(PktData, Bytes);
         if(CRC==0)
         {

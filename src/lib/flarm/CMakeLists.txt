@@ -27,6 +27,5 @@ target_link_libraries(${PROJECT_NAME}
     core
     etl::etl
     utils
-    hardware_pio
     libcrc
 )

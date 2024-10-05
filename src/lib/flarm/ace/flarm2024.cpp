@@ -3,8 +3,9 @@
 #include <math.h>
 #include "flarm2024.hpp"
 #include "flarm_utils.hpp"
+#include "ace/manchester.hpp"
 
-inline uint32_t MX(uint32_t z, uint32_t y, uint32_t sum, uint8_t e, uint8_t p, const uint32_t *keys)
+inline uint32_t MX(uint32_t z, uint32_t y, uint32_t sum, uint8_t e, uint8_t p, const etl::span<const uint32_t> &keys)
 {
     return (((z >> 5) ^ (y << 2)) + ((y >> 3) ^ (z << 4))) ^ ((sum ^ y) + (keys[(p & 3) ^ e] ^ z));
 }
@@ -22,10 +23,10 @@ void Flarm2024::bteaEncode(uint32_t *data) const
         for (uint8_t p = 0; p < BTEA_N - 1; p++)
         {
             y = data[p + 1];
-            z = data[p] += MX(z, y, sum, e, p, BTEA_KEYS.data());
+            z = data[p] += MX(z, y, sum, e, p, BTEA_KEYS);
         }
         y = data[0];
-        z = data[BTEA_N - 1] += MX(z, y, sum, e, BTEA_N - 1, BTEA_KEYS.data());
+        z = data[BTEA_N - 1] += MX(z, y, sum, e, BTEA_N - 1, BTEA_KEYS);
     } while (--rounds);
 }
 
@@ -41,13 +42,14 @@ void Flarm2024::bteaDecode(uint32_t *data) const
         for (uint8_t p = BTEA_N - 1; p > 0; p--)
         {
             z = data[p - 1];
-            y = data[p] -= MX(z, y, sum, e, p, BTEA_KEYS.data());
+            y = data[p] -= MX(z, y, sum, e, p, BTEA_KEYS);
         }
         z = data[BTEA_N - 1];
-        y = data[0] -= MX(z, y, sum, e, 0, BTEA_KEYS.data());
+        y = data[0] -= MX(z, y, sum, e, 0, BTEA_KEYS);
         sum -= BTEA_DELTA;
     } while (--rounds);
 }
+
 
 void Flarm2024::scramble(uint32_t *data, uint32_t timestamp) const
 {
@@ -89,18 +91,10 @@ void Flarm2024::scramble(uint32_t *data, uint32_t timestamp) const
 
 OpenAce::PostConstruct Flarm2024::postConstruct()
 {
-    // BaseModule::moduleByName(*this, Tuner::NAME);
-    if (sizeof(RadioPacket) != 24 && (sizeof(RadioPacket) != sizeof(RadioPacket)))
-    {
-        panic("Flarm packet size is not 26 bytes");
-        return OpenAce::PostConstruct::FAILED;
-    }
-
     frameConsumerQueue = xQueueCreate(4, sizeof(OpenAce::RadioRxFrame));
     if (frameConsumerQueue == nullptr)
     {
-        panic("Failed to create frameConsumerQueue");
-        return OpenAce::PostConstruct::FAILED;
+        return OpenAce::PostConstruct::XQUEUE_ERROR;
     }
     return OpenAce::PostConstruct::OK;
 }
@@ -108,19 +102,12 @@ OpenAce::PostConstruct Flarm2024::postConstruct()
 void Flarm2024::start()
 {
     xTaskCreate(flarmReceiveTask, "flarmReceiveTask", configMINIMAL_STACK_SIZE + 2048, this, tskIDLE_PRIORITY, &taskHandle);
-    //    getBus().receive(OpenAce::DataSourceListen{OpenAce::DataSource::FLARM, true});
-    // auto tuner = static_cast<Tuner *>(BaseModule::moduleByName(*this, Tuner::NAME));
-    // tuner->startListen(OpenAce::DataSource::FLARM);
     getBus().subscribe(*this);
 };
 
 void Flarm2024::stop()
 {
     getBus().unsubscribe(*this);
-    //    getBus().receive(OpenAce::DataSourceListen{OpenAce::DataSource::FLARM, false});
-    // auto tuner = static_cast<Tuner *>(BaseModule::moduleByName(*this, Tuner::NAME));
-    // tuner->stopListen(OpenAce::DataSource::FLARM);
-
     vTaskDelete(taskHandle);
     vQueueDelete(frameConsumerQueue);
 };
@@ -349,30 +336,29 @@ void Flarm2024::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
     }
 }
 
-const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositionRequest &msg)
+void Flarm2024::on_receive(const OpenAce::RadioTxPositionRequest &msg)
 {
-    Flarm2024::RadioPacket radioPacket;
-
     if (msg.radioParameters.config.dataSource == OpenAce::DataSource::FLARM)
     {
 
         uint8_t addressType = static_cast<uint8_t>(openAceConfiguration.addressType);
 
+        auto epochSeconds = CoreUtils::secondsSinceEpoch();
         auto ownLat = ownshipPosition.lat;
         auto ownLon = ownshipPosition.lon;
 
         uint32_t latitude, longitude;
-        if (ownLat < 0.0f)
+        if (ownLat < 0.f)
         {
             latitude = (uint32_t)(-(((int32_t)(-ownLat * 1e7) + 26.f) / 52.f)) & 0x0FFFFF;
         }
         else
         {
-            latitude = (uint32_t)((((uint32_t)(ownLat * 1e7) + 26.0f) / 52.0f)) & 0x0FFFFF;
+            latitude = (uint32_t)((((uint32_t)(ownLat * 1e7) + 26.f) / 52.0f)) & 0x0FFFFF;
         }
 
         auto divisor = lonDivisor(ownLat);
-        if (ownLon < 0.0)
+        if (ownLon < 0.f)
         {
             longitude = (uint32_t)(-(((int32_t)(-ownLon * 1e7) + (divisor >> 1)) / divisor)) & 0x0FFFFF;
         }
@@ -381,8 +367,7 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
             longitude = (((uint32_t)(ownLon * 1e7) + (divisor >> 1)) / divisor) & 0x0FFFFF;
         }
 
-        uint32_t epochSeconds = (CoreUtils::msSinceEpoch()) / 1000;
-        RadioPacket radioPacket =
+        Flarm2024::RadioPacket radioPacket =
             {
                 .aircraftID = openAceConfiguration.address, // ownshipPosition.address,
                 .messageType = 0x02,
@@ -399,9 +384,9 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
                 .altitude = static_cast<uint16_t>(enscale<12, 1, false>(ownshipPosition.altitudeWgs84 + 1000)),
                 .latitude = latitude,
                 .longitude = longitude,
-                .turnRate = static_cast<int16_t>(enscale<6, 2, true>(ownshipPosition.hTurnRate * 20)),
+                .turnRate = static_cast<uint16_t>(enscale<6, 2, true>(ownshipPosition.hTurnRate * 20)),
                 .groundSpeed = static_cast<uint16_t>(enscale<8, 2, false>(ownshipPosition.groundSpeed * 10)),
-                .verticalSpeed = static_cast<int16_t>(enscale<6, 2, true>(ownshipPosition.verticalSpeed * 10)),
+                .verticalSpeed = static_cast<uint16_t>(enscale<6, 2, true>(ownshipPosition.verticalSpeed * 10)),
                 .course = static_cast<uint16_t>(ownshipPosition.course * 2),
                 .movementStatus = static_cast<uint8_t>(ownshipPosition.groundSpeed > OpenAce::GROUNDSPEED_CONSIDERING_AIRBORN ? 2 : 1), // TODO: Add support for Circling
                 .gnssHorizontalAccuracy = 0b010010,                                                                                     // enscale<3, 2, false>((gpsStats.hDop*2+5)/10),
@@ -414,9 +399,10 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
 #if !defined(UNIT_TESTING)
         scramble(data, epochSeconds);
         bteaEncode(data + 2);
+        //btea2(data, true);
 #endif
 
-        uint16_t calculatedChecksum = flarmCalculateChecksum((uint8_t *)data, RadioPacket::packetLength);
+        uint16_t calculatedChecksum = flarmCalculateChecksum(reinterpret_cast<uint8_t *>(data), RadioPacket::packetLength);
         radioPacket.checksum = swapBytes16(calculatedChecksum);
 
         statistics.transmittedAircraftPositions++;
@@ -424,12 +410,10 @@ const Flarm2024::RadioPacket Flarm2024::on_receive(const OpenAce::RadioTxPositio
         getBus().receive(OpenAce::RadioTxFrame{
             Radio::TxPacket{
                 msg.radioParameters,
-                RadioPacket::totalLength,
+                RadioPacket::totalLengthWCRC,
                 data},
             msg.radioNo});
     }
-
-    return radioPacket;
 }
 
 OpenAce::AddressType Flarm2024::addressTypeFromFlarm(uint8_t addressType) const
@@ -447,18 +431,13 @@ OpenAce::AddressType Flarm2024::addressTypeFromFlarm(uint8_t addressType) const
 
 uint8_t Flarm2024::addressTypeToFlarm(OpenAce::AddressType addressType) const
 {
-    constexpr uint8_t lookupTable[] =
-        {
-            0x00, // RANDOM
-            0x01, // ICAO
-            0x02, // FLARM
-            0x00, // OGN (default to 0x00, update if needed)
-            0x00, // FANET (default to 0x00, update if needed)
-            0x00, // ADSL (default to 0x00, update if needed)
-            0x00, // RESERVED (default to 0x00, update if needed)
-            0x00  // UNKNOWN (default to 0x00, update if needed)
-        };
-
-    uint8_t index = static_cast<uint8_t>(addressType) & 0x07;
-    return lookupTable[index];
+    switch (addressType)
+    {
+    case OpenAce::AddressType::ICAO:
+        return 0x01;
+    case OpenAce::AddressType::FLARM:
+        return 0x02;
+    default:
+        return 0;
+    }
 }

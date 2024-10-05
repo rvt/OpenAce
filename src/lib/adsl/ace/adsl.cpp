@@ -247,7 +247,7 @@ void ADSL::on_receive(const OpenAce::RadioTxPositionRequest &msg)
         packet.relay = 0;
         packet.timeStamp = (CoreUtils::msSinceEpoch() / 250) % 60;
         packet.flightState = ownshipPosition.airborne ? ADSL_Packet::FlightState::FS_Airborne : ADSL_Packet::FlightState::FS_OnGround;
-        packet.arcraftCategory = mapAircraftCategory(openAceConfiguration.category);
+        packet.aircraftCategory = mapAircraftCategory(openAceConfiguration.category);
         packet.emergencyStatus = ADSL_Packet::ES_NoEmergency;
 
         packet.setLatitude(ownshipPosition.lat);
@@ -269,8 +269,8 @@ void ADSL::on_receive(const OpenAce::RadioTxPositionRequest &msg)
         getBus().receive(OpenAce::RadioTxFrame{
             Radio::TxPacket{
                 msg.radioParameters,
-                ADSL_Packet::TxBytes,
-                (const void *)(&packet)},
+                ADSL_Packet::TotalTxBytes,
+                (const void *)(&packet.length)},
             msg.radioNo});
         statistics.transmittedAircraftPositions++;
     }
@@ -301,7 +301,7 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
             packet.address,
             addressMapToAddressType(packet.addressMapping),
             OpenAce::DataSource::ADSL,
-            static_cast<OpenAce::AircraftCategory>(packet.arcraftCategory),
+            static_cast<OpenAce::AircraftCategory>(packet.aircraftCategory),
             packet.addressMapping == 0x00,
             false,
             packet.flightState == ADSL_Packet::FlightState::FS_Airborne, // airBorn
@@ -339,7 +339,7 @@ void ADSL::adslReceiveTask(void *arg)
                 adsl->statistics.fecErr++;
                 continue;
             }
-            memcpy(&packet.length, msg.frame, ADSL_Packet::TxBytes);
+            memcpy(&packet.length, msg.frame, ADSL_Packet::TotalTxBytes);
             packet.Descramble();
 
             if (packet.key != 0)

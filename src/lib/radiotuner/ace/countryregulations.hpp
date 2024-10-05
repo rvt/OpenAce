@@ -21,18 +21,18 @@ public:
         ZONE6  // Zone 6: South America (west of 30W, south of 10N)
     };
 
-    inline static constexpr OpenAce::Mapping<Zone, const char*> ZoneMapping[] =
-    {
-        {Zone::ZONE0, "ZONE0"},
-        {Zone::ZONE1, "ZONE1"},
-        {Zone::ZONE2, "ZONE2"},
-        {Zone::ZONE3, "ZONE3"},
-        {Zone::ZONE4, "ZONE4"},
-        {Zone::ZONE5, "ZONE5"},
-        {Zone::ZONE6, "ZONE6"},
+    inline static constexpr OpenAce::Mapping<Zone, const char *> ZoneMapping[] =
+        {
+            {Zone::ZONE0, "ZONE0"},
+            {Zone::ZONE1, "ZONE1"},
+            {Zone::ZONE2, "ZONE2"},
+            {Zone::ZONE3, "ZONE3"},
+            {Zone::ZONE4, "ZONE4"},
+            {Zone::ZONE5, "ZONE5"},
+            {Zone::ZONE6, "ZONE6"},
     };
 
-    static const char* zoneToString(Zone zone)
+    static const char *zoneToString(Zone zone)
     {
         return OpenAce::enumToString(ZoneMapping, zone, "UNKNOWN");
     }
@@ -54,33 +54,34 @@ public:
     static constexpr Frequency SouthAmerica{917'000'000, 400'000, 24, 30};
     static constexpr Frequency EuropeFanet{869'525'000, 000'000, 00, 14};
 
-    static constexpr Radio::ProtocolConfig FLARM{Radio::Mode::GFSK, OpenAce::DataSource::FLARM, 24 + 2, 7, {0x99, 0xA5, 0xA9, 0x55, 0x66, 0x65, 0x96, 0x00}};   // 0 FLARM 0 airtime 6ms
+    // First byte of the syncWord is the preamble and currently always one byte
+    static constexpr Radio::ProtocolConfig FLARM{Radio::Mode::GFSK, OpenAce::DataSource::FLARM, 24 + 2, 8, {0x55, 0x99, 0xA5, 0xA9, 0x55, 0x66, 0x65, 0x96}};   // 0 FLARM 0 airtime 6ms
     static constexpr Radio::ProtocolConfig OGN1{Radio::Mode::GFSK, OpenAce::DataSource::OGN1, 20 + 6, 8, {0xAA, 0x66, 0x55, 0xA5, 0x96, 0x99, 0x96, 0x5A}};     // 1 OGN 1 airtime 6ms <- This seems to be in use 20 Byte packet length :: 6 byte CRC
-    static constexpr Radio::ProtocolConfig ADSL{Radio::Mode::GFSK, OpenAce::DataSource::ADSL, 2 + 20 + 3, 6, {0x55, 0x99, 0x95, 0xA6, 0x9A, 0x65, 0xA9, 0x6A}}; // 3 ADSL
+    static constexpr Radio::ProtocolConfig ADSL{Radio::Mode::GFSK, OpenAce::DataSource::ADSL, 2 + 20 + 3, 6, {0x55, 0x99, 0x95, 0xA6, 0x9A, 0x65, 0xA9, 0x6A}}; // 3 ADSL == SYNC  0x72 0x4B = Manchester 0x95, 0xA6, 0x9A, 0x65
     static constexpr Radio::ProtocolConfig PAW{Radio::Mode::GFSK, OpenAce::DataSource::PAW, 00 + 0, 8, {0xB4, 0x2B, 0x00, 0x00, 0x00, 0x00, 0x18, 0x71}};       // 4 PAW
     static constexpr Radio::ProtocolConfig FANET{Radio::Mode::LORA, OpenAce::DataSource::FANET, 00 + 0, 1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};   // 5 FANET 3
 
     enum class ChannelMethod : uint8_t
     {
-        CHANNEL_0,     // Europe has 2 channels channel 0 =868.2MHz, channel 1 = 868.4MHz
+        CHANNEL_0, // Europe has 2 channels channel 0 = 868.2MHz, channel 1 = 868.4MHz
         CHANNEL_1
     };
 
     struct ProtocolTimeSlot
     {
-        uint8_t idx;                       // This slot ID
-        uint8_t nextSlotIdx;               // Next slot to use, this is used to optmise searching for the next ID, specially when it's wrapped back
-        CountryRegulations::Zone zone;     // Zone where this regulation applies
-        OpenAce::DataSource source;        // System Source
+        uint8_t idx;                              // This slot ID
+        uint8_t nextSlotIdx;                      // Next slot to use, this is used to optmise searching for the next ID, specially when it's wrapped back
+        CountryRegulations::Zone zone;            // Zone where this regulation applies
+        OpenAce::DataSource source;               // System Source
         const Frequency &frequency;               // Entry on the regulation table
         const Radio::ProtocolConfig &radioConfig; // Entry on the regulation table
-        uint16_t slotStartTime;            // in ms start time of a slot must be between 0..1000
-        uint16_t slotDuration;             // in ms duration of this slot must be between 0..1000
-        uint16_t txMinTime;                // Minimum time between transmissions on a single frequency
-        uint16_t txMaxTime;                // Maximum time between transmissions on a single frequency
-        uint8_t waitAfterCatStart;         // If CAD was detected, minimum time to wait before transmitting
-        uint8_t waitAfterCatEnd;           // If CAD was detected, maximum time to wait before transmitting
-        ChannelMethod channelMethod;       // What method channel selection
+        uint16_t slotStartTime;                   // in ms start time of a slot must be between 0..1000
+        uint16_t slotDuration;                    // in ms duration of this slot must be between 0..1000
+        uint16_t txMinTime;                       // Minimum time between transmissions on a single frequency
+        uint16_t txMaxTime;                       // Maximum time between transmissions on a single frequency
+        uint8_t waitAfterCatStart;                // If CAD was detected, minimum time to wait before transmitting
+        uint8_t waitAfterCatEnd;                  // If CAD was detected, maximum time to wait before transmitting
+        ChannelMethod channelMethod;              // What method channel selection
     };
 
     //        protocol_t protocol;
@@ -94,8 +95,7 @@ public:
     // - Timeslots may have one gap (see FLARM has a gap of 200ms between 200 and 400ms in the second)
     // - nextSlotId must contain the index of 'the other' timeslot
 
-    static constexpr etl::array<const ProtocolTimeSlot, 10> timings
-    {
+    static constexpr etl::array<const ProtocolTimeSlot, 10> timings{
         NONE_DATASOURCE,
 
         // FLARM packages are send/rceived 400..1200ms after PPS channel is based on FLARM_TIME_BASED_2SLOTS. Minimum 600ms between packages, maximum of 1400ms between packages

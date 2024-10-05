@@ -83,12 +83,12 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, OpenAce::RadioTx
     // 13.4.6 SetPacketParams
     static constexpr sx126x_pkt_params_gfsk_t DEFAULT_PKG_PARAMS_GFSK =
     {
-        .preamble_len_in_bits = 24,
+        .preamble_len_in_bits = 0,  // SET per protocol
         .preamble_detector = SX126X_GFSK_PREAMBLE_DETECTOR_MIN_8BITS, // Reducing this from 16 to 8Bit seems to increase packet rate (at least for SoftRF)
-        .sync_word_len_in_bits = 0,                                   // To be filled appkying of GFSK in
+        .sync_word_len_in_bits = 0,  // SET per protocol
         .address_filtering = SX126X_GFSK_ADDRESS_FILTERING_DISABLE,
-        .header_type = SX126X_GFSK_PKT_VAR_LEN,
-        .pld_len_in_bytes = 52,          //(24 + 2) * MANCHESTER, // 24byte + 2byte CRC
+        .header_type = SX126X_GFSK_PKT_FIX_LEN,
+        .pld_len_in_bytes = 0,          // SET per protocol
         .crc_type = SX126X_GFSK_CRC_OFF, // Manchester decoding used. so no CRC possible
         .dc_free = SX126X_GFSK_DC_FREE_OFF
     };
@@ -97,19 +97,19 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, OpenAce::RadioTx
     // 13.4.5 SetModulationParams
     static constexpr sx126x_mod_params_gfsk_t DEFAULT_MOD_PARAMS_GFSK =
     {
-        .br_in_bps = 100000,                          // 50bps*2 (Manchester) = 100000
-        .fdev_in_hz = 50000,                          // To Check
+        .br_in_bps = 100000,                          // 50kbps*2 (Manchester) = 100000
+        .fdev_in_hz = 50000,                          // 
         .pulse_shape = SX126X_GFSK_PULSE_SHAPE_BT_05, // Gaussian BT 0.5
-        .bw_dsb_param = SX126X_GFSK_BW_117300
+        .bw_dsb_param = SX126X_GFSK_BW_125000         // 
     };
 
-    static constexpr sx126x_mod_params_gfsk_t mod_params_gfsk_adsl =
-    {
-        .br_in_bps = 100000,  // 100Kbps
-        .fdev_in_hz = 100000, // -50Khz .. 50Khz
-        .pulse_shape = SX126X_GFSK_PULSE_SHAPE_OFF,
-        .bw_dsb_param = SX126X_GFSK_BW_234300
-    };
+    // static constexpr sx126x_mod_params_gfsk_t mod_params_gfsk_adsl =
+    // {
+    //     .br_in_bps = 100000,  // 100Kbps
+    //     .fdev_in_hz = 100000, // -50Khz .. 50Khz
+    //     .pulse_shape = SX126X_GFSK_PULSE_SHAPE_OFF,
+    //     .bw_dsb_param = SX126X_GFSK_BW_234300
+    // };
 
     // ************************************************************************************
     // LORA

@@ -45,7 +45,7 @@ TEST_CASE( "Correct bit errors and get data", "[single-file]" )
     REQUIRE( (packet.reserved1 == 0) );
     REQUIRE( (packet.relay == 0) );
     REQUIRE( (packet.flightState == 2) );
-    REQUIRE( (packet.arcraftCategory == 1) );
+    REQUIRE( (packet.aircraftCategory == 1) );
     REQUIRE( (packet.emergencyStatus == ADSL_Packet::ES_NoEmergency) );
     REQUIRE( (packet.timeStamp == 3) );
 }

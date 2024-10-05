@@ -12,4 +12,5 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/libcrc libcrc)
 
 # Add subdirectories for each project
 add_subdirectory(lib/adsbdecoder/adsbdecoder_tests)
+add_subdirectory(lib/flarm/flarm_tests)
 add_subdirectory(lib/core/core_tests)

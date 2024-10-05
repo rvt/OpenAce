@@ -14,6 +14,7 @@ add_library(${PROJECT_NAME} STATIC
     ace/EMA.cpp
     ace/ognconv.cpp
     ace/moreutils.cpp
+    ace/manchester.cpp
 )
 
 target_include_directories(${PROJECT_NAME} INTERFACE

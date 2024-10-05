@@ -8,7 +8,7 @@
 
 /* OpenACE. */
 #include "etl/map.h"
-#include "ace/utils.hpp"
+#include "ace/manchester.hpp"
 #include "ace/coreutils.hpp"
 
 void Sx1262::start()
@@ -234,7 +234,6 @@ void Sx1262::configureSx1262(const RadioParameters &lastParameters, const RadioP
             pkt_params_gfsk.preamble_len_in_bits = 1 * 8;
             pkt_params_gfsk.sync_word_len_in_bits = (newParameters.config.syncLength) * 8;
             pkt_params_gfsk.pld_len_in_bytes = newParameters.config.packetLength * MANCHESTER;
-            pkt_params_gfsk.header_type = SX126X_GFSK_PKT_FIX_LEN;
 
             sx126x_set_gfsk_pkt_params(this, &pkt_params_gfsk);
 
