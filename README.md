@@ -1,6 +1,6 @@
 # OpenAce Conspicuity Device
 
-> **_NOTE:_**: 
+> **_NOTE:_**:
 > I am in the process of uploading the necessary files to GitHub. More will be added soon, including the ~~OpenSCAD enclosure~~ [enclosure](https://github.com/rvt/OpenAce/tree/initial/enclosure), ~~KiCAD PCB files~~ [Schematic/PCB](https://github.com/rvt/OpenAce/tree/initial/OpenACE%20V0.0.2), unit tests for the source code, and additional resources.
 
 > [!TIP]
@@ -12,10 +12,41 @@ The device is built around the Raspberry Pi Pico 2040 and can be configured with
 
 Powered by a Li-Ion battery, the device includes a PCB with a USB-C charger. The estimated battery life is between 4 and 6 hours, though this is subject to further testing.
 
-![KiCAD 3D Rendering](doc/img/kicadpcb.jpg)
-![Soldered PCB](doc/img/solderedpcb.jpg)
-![OpenScad View (Open)](doc/img/openscadopen.jpg)
-![OpenScad View (Closed)](doc/img/openscadclosed.jpg)
+| ![KiCAD 3D Rendering](doc/img/kicadpcb.jpg)       | ![Soldered PCB](doc/img/solderedpcb.jpg)              |
+| ------------------------------------------------- | ----------------------------------------------------- |
+| ![OpenScad View (Open)](doc/img/openscadopen.jpg) | ![OpenScad View (Closed)](doc/img/openscadclosed.jpg) |
+
+## Radio Protocol Support
+
+Radio Protocol is the method used to communicate with other conspicuity devices
+
+| Radio Protocol | Send               | Receive            | Multi Protocol\*   |
+| -------------- | ------------------ | ------------------ | ------------------ |
+| OGN            | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| ADS-L          | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Flarm (2024)   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| ADS-B out      | :no_entry:         | :heavy_check_mark: | :heavy_minus_sign: |
+| PAW            | :construction:     | :construction:     | :construction:     |
+| FANET          | :construction:     | :construction:     | :construction:     |
+
+\* Multi Protocol is a feature of OpenAce that allows to enable multiple protocols both send and receive on a single transceiver my sharing the air time. The Tranceiver will alternate between the different protocols and prioritice a specific protocol when it receives data for that protocol.
+
+### Communication support
+
+Communication support is what protocols are supported to other devices like electronic flight bags or other equipment.
+
+| Protocol   | Send UDP over WIFI | Send UDP over Bluetooth |
+| ---------- | ------------------ | ----------------------- |
+| GDL90      | :heavy_check_mark: | :construction:          |
+| AirConnect | :construction:     | :construction:          |
+
+### Tested with Electronic Flight Bag
+
+OpenAce is currently tested with SkyDeamon only,  If you made it work with any other software on Phone or Tabled, do let me know so I can add or help out ot make this work.
+
+| EFB       | GDL90 over WIFI    | GDL90 over Bluetooth |
+| --------- | ------------------ | -------------------- |
+| SkyDeamon | :heavy_check_mark: | :construction:       |
 
 The PCB measures approximately 8x9 cm.
 
@@ -27,18 +58,17 @@ Most libraries are used 'as-is' Some of them have been slightly modified for per
 2. FreeRTOS, OpenAce uses tasks and timers and avoids loops and runs in multi-core SMP mode. [https://www.freertos.org](https://www.freertos.org)
 3. LWiP Pretty cool and sometimes confusing TCP/IP protocol suite [https://savannah.nongnu.org/projects/lwip/](https://savannah.nongnu.org/projects/lwip/)
 4. ArduinoJSON for loading and storing configuration [https://arduinojson.org](https://arduinojson.org)
-5. etlcpp pretty awesome library written by John Wellbelove  [https://www.etlcpp.com](https://www.etlcpp.com)
+5. etlcpp pretty awesome library written by John Wellbelove [https://www.etlcpp.com](https://www.etlcpp.com)
 6. libcrc [https://github.com/lammertb/libcrc](https://github.com/lammertb/libcrc)
 7. minnmea for parding NMEA sentences [https://github.com/kosma/minmea/](https://github.com/kosma/minmea/)
-8. Catch2 for unit testing
-
+8. Catch2 for unit testing [https://github.com/catchorg/Catch2](https://github.com/catchorg/Catch2)
 
 # OpenAce Disclaimer
 
-> [!IMPORTANT]
-> **Important Notice: Use at Your Own Risk**
+> [!IMPORTANT] > **Important Notice: Use at Your Own Risk**
 >
 > The OpenAce Conspicuity Device is provided "as is," without any guarantees or warranties of any kind. By using this device, you acknowledge and agree that:
+>
 > 1. **No Warranty**: The creators of OpenAce make no claims or guarantees regarding the accuracy, reliability, or fitness for a specific purpose of the device or its associated software. This includes, but is not limited to, communication with OGN, Flarm, ADS-L, or any other protocols.
 > 2. **Assumption of Risk**: You assume full responsibility for any and all risks associated with the use of OpenAce. This includes, but is not limited to, risks related to hardware malfunctions, software issues, or incorrect transmission/interpretation of data.
 > 3. **Limitation of Liability**: Under no circumstances shall the creators, contributors, or affiliates of OpenAce be held liable for any direct, indirect, incidental, or consequential damages resulting from the use, misuse, or inability to use the device or its software.
