@@ -6,6 +6,11 @@ include <NopSCADlib/vitamins/batteries.scad>
 include <NopSCADlib/vitamins/toggles.scad>
 
 
+// Change log
+// 9 Oct 2024 set chamfer of box to 0
+// 9 Oct 2024 widen USB plugs
+
+
 $fn = $preview ? 20 : 76;
 BOX_CORNER_RADUIS=4; // [0:5]
 
@@ -68,7 +73,7 @@ left_half(x=VISUALIZE_CUT&&$preview?VISUALIZE_CUT_POS:1000,s=200)
 diff("remove", "keep")
 color_this("gray")
 up(ATTACH_OFFSET)
-bottomAndWall(size=case, wall=WALL_THICKNESS, bottom=BOTTOM_THICKNESS, rounding=BOX_CORNER_RADUIS, ichamfer=1, h=CASE_HEIGHT, rim=RIM)
+bottomAndWall(size=case, wall=WALL_THICKNESS, bottom=BOTTOM_THICKNESS, rounding=BOX_CORNER_RADUIS, ichamfer=0, h=CASE_HEIGHT, rim=RIM)
 {   
     position("iright") 
       left(0.3)
@@ -92,12 +97,12 @@ bottomAndWall(size=case, wall=WALL_THICKNESS, bottom=BOTTOM_THICKNESS, rounding=
           }
           attach("PICO") {
              {
-              cuboid([10.5,6,5], rounding=2, anchor=BOTTOM, edges=[LEFT+FWD, RIGHT+FWD, LEFT+BACK, RIGHT+BACK]);
+              cuboid([11.5,6.5,5], rounding=2, anchor=BOTTOM, edges=[LEFT+FWD, RIGHT+FWD, LEFT+BACK, RIGHT+BACK]);
             }
           }            
           attach("POWER") {
              {
-              cuboid([11,6.5,5], rounding=2, anchor=BOTTOM, edges=[LEFT+FWD, RIGHT+FWD, LEFT+BACK, RIGHT+BACK]);
+              cuboid([12,7,5], rounding=2, anchor=BOTTOM, edges=[LEFT+FWD, RIGHT+FWD, LEFT+BACK, RIGHT+BACK]);
             }
           }  
           attach("FLASH") {
