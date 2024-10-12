@@ -66,6 +66,9 @@ bottomAndWall(size=BAT_HOLDER, wall=WALL_THICKNESS, bottom=2, rounding=BOX_CORNE
 }
 
 
+// up(25) right(45) fwd(72) zrot(90) import("gps-antenna-holder.stl", convexity=2);
+
+
 //////////////// CASE ////////////////
 removeTag=$preview?"preview":"remove";
 if (VISUALIZE_MAIN_CASE)
