@@ -27,5 +27,5 @@ runs:
         export PICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk/
         export FREERTOS_KERNEL_PATH=$GITHUB_WORKSPACE/FreeRTOS-Kernel
         cd src/pico
-        cmake -B build -G Ninja && ninja -C build
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && ninja -C build
         ls -lrt build/*.uf2
