@@ -243,13 +243,14 @@ public:
     RadioTunerRx(etl::imessage_bus &bus, const Configuration &config) : BaseModule(bus, NAME),
         currentZone(CountryRegulations::Zone::ZONE0)
     {
+        (void)config;
     }
     virtual ~RadioTunerRx() = default;
 
     virtual OpenAce::PostConstruct postConstruct() override;
     virtual void start() override;
     virtual void stop() override;
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
     void addRadioTasks(uint8_t numRadios);
 
 private:

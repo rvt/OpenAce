@@ -17,11 +17,12 @@ public:
     static constexpr const etl::string_view NAME = "Webserver";
     Webserver(etl::imessage_bus& bus, const Configuration &config) : BaseModule(bus, NAME)
     {
+        (void)config;
     }
 
     virtual ~Webserver() = default;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 
     virtual OpenAce::PostConstruct postConstruct() override;
 

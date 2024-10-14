@@ -21,7 +21,7 @@
 // Create dynamic headers based on the files extension
 #define LWIP_HTTPD_DYNAMIC_HEADERS 1
 // THis file will be generated and located in the web servers module
-#define HTTPD_FSDATA_FILE "openace_fsdata.c"
+#define HTTPD_FSDATA_FILE "@CMAKE_CURRENT_SOURCE_DIR@/../lib/webserver/openace_fsdata.c"
 
 // Default gateway to 192.168.1.1 instead of 192.168.4.1
 #define CYW43_DEFAULT_IP_AP_ADDRESS LWIP_MAKEU32(192, 168, 1, 1)

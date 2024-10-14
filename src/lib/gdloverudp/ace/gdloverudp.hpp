@@ -69,7 +69,7 @@ public:
 
     virtual OpenAce::PostConstruct postConstruct() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 
     virtual void start() override
     {

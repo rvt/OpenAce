@@ -34,7 +34,7 @@ inline BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                                      TickType_t xTicksToWait,
                                      const BaseType_t xCopyPosition )
 {
-    printf("xQueueGenericSend\n");
+    //printf("xQueueGenericSend\n");
     return pdPASS;
 };
 
@@ -45,7 +45,7 @@ inline QueueHandle_t xQueueGenericCreate( const UBaseType_t uxQueueLength,
     const UBaseType_t uxItemSize,
     const uint8_t ucQueueType )
 {
-    printf("xQueueGenericCreate\n");
+    //printf("xQueueGenericCreate\n");
     return nullptr;
 }
 
@@ -55,24 +55,24 @@ inline BaseType_t xQueueReceive( QueueHandle_t xQueue,
                                  void * const pvBuffer,
                                  TickType_t xTicksToWait )
 {
-    printf("xQueueReceive\n");
+    //printf("xQueueReceive\n");
     return pdTRUE;
 }
 
 inline void vQueueDelete( QueueHandle_t xQueue )
 {
-    printf("vQueueDelete\n");
+    //printf("vQueueDelete\n");
 }
 
 inline BaseType_t xQueueTakeMutexRecursive( QueueHandle_t xMutex,
     TickType_t xTicksToWait )
 {
-    printf("xQueueTakeMutexRecursive\n");
+    //printf("xQueueTakeMutexRecursive\n");
     return pdTRUE;
 }
 
 inline BaseType_t xQueueGiveMutexRecursive(QueueHandle_t xMutex)
 {
-    printf("xQueueGiveMutexRecursive\n");
+    //puts("xQueueGiveMutexRecursive");
     return pdTRUE;
 }

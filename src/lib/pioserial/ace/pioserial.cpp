@@ -158,7 +158,7 @@ void PioSerial::pio_irq_func(uint8_t irqHandlerIndex)
 bool PioSerial::sendBlocking(uint32_t givenBaudRate, const uint8_t *data, uint16_t length)
 {
     PIO txPio;
-    uint txSmIndx;
+    int txSmIndx;
     uint txOffset;
 
     if (!add_pio_program(&uart_tx_program, &txPio, &txSmIndx, &txOffset))

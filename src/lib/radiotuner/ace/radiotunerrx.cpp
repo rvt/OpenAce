@@ -77,8 +77,9 @@ void RadioTunerRx::addRadioTasks(uint8_t numRadios)
     }
 }
 
-void RadioTunerRx::getData(etl::string_stream &stream, const etl::string_view optional) const
+void RadioTunerRx::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     for (auto it = radioTasks.cbegin(); it != radioTasks.cend(); ++it)
     {
@@ -189,6 +190,7 @@ void RadioTunerRx::on_receive(const OpenAce::AircraftPositionMsg &msg)
 
 void RadioTunerRx::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }
 
 void RadioTunerRx::on_receive(const OpenAce::ConfigUpdatedMsg &msg)

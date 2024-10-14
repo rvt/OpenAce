@@ -206,6 +206,7 @@ static void opt_write_u32(uint8_t **opt, uint8_t cmd, uint32_t val)
 
 static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr, u16_t src_port)
 {
+    (void)upcb;
     dhcp_server_t *d = arg;
     (void)upcb;
     (void)src_addr;
@@ -229,7 +230,6 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     dhcp_msg.op = DHCPOFFER;
     memcpy(&dhcp_msg.yiaddr, &ip4_addr_get_u32(ip_2_ip4(&d->ip)), 4);
 
-    uint8_t *opt2 = (uint8_t *)&dhcp_msg.options;
     uint8_t *opt = (uint8_t *)&dhcp_msg.options;
     opt += 4; // assume magic cookie: 99, 130, 83, 99
 

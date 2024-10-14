@@ -66,7 +66,7 @@ class PioSerial
     const uint32_t baudrate;
 
     PIO pio;
-    uint smIndx;
+    int smIndx;
     uint offset;
     uint8_t charIndex;
 

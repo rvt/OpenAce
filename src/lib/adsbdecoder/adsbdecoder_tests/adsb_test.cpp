@@ -37,6 +37,7 @@ public:
     }
     void on_receive_unknown(const etl::imessage &msg)
     {
+        (void)msg;
     }
 };
 

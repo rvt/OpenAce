@@ -85,6 +85,7 @@ RtcModule *UbloxM8N_rtc = nullptr;
 // Call RTC in inteerupt to notive of when last second pulse happened
 void UbloxM8N_pps_callback(uint32_t events)
 {
+    (void)events;
     UbloxM8N_rtc->ppsEvent();
 }
 
@@ -219,8 +220,9 @@ OpenAce::PostConstruct UbloxM8N::postConstruct()
     return OpenAce::PostConstruct::OK;
 }
 
-void UbloxM8N::getData(etl::string_stream &stream, const etl::string_view optional) const
+void UbloxM8N::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"crcErrors\":" << statistics.crcErrors;
     stream << ",\"totalReceived\":" << statistics.totalReceived;

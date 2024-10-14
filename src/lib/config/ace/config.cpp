@@ -262,6 +262,7 @@ bool Config::deleteData(const etl::string_view fullPath)
 
 void Config::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }
 
 const OpenAce::PinTypeMap Config::pinMap(const etl::string_view moduleName, OpenAce::PinTypeMap map) const

@@ -9,6 +9,7 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
                                    StackType_t **ppxIdleTaskStackBuffer,
                                    uint32_t *pulIdleTaskStackSize, BaseType_t xCoreID)
 {
+    (void)xCoreID;
     /* If the buffers to be provided to the Idle task are declared inside this
     function then they must be declared static – otherwise they will be allocated on
     the stack and so not exists after this function exits. */

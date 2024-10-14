@@ -60,6 +60,7 @@ void ADSBDecoder::on_receive(const OpenAce::ADSBMessageBin &msg)
 
 void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
 {
+    (void)length;
     // auto usSinceBoot = CoreUtils::usSinceBoot();
     // static int msgCount = 0;
 
@@ -193,7 +194,6 @@ void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
                 (float)current.velocity * KN_TO_MS,
                 static_cast<int16_t>(current.heading),
                 0.0f,
-                0.0f,
                 fromOwn.distance,
                 fromOwn.relNorth,
                 fromOwn.relEast,
@@ -202,8 +202,9 @@ void ADSBDecoder::processAdsbData(const uint8_t *data, uint8_t length)
     }
 }
 
-void ADSBDecoder::getData(etl::string_stream &stream, const etl::string_view optional) const
+void ADSBDecoder::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"crcErrors\":" << statistics.crcErrors;
     stream << ",\"knownAircraftFull\":" << statistics.knownAircraftFull;

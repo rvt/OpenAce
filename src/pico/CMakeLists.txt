@@ -9,6 +9,7 @@ execute_process(
 
 # All defines go in config.hpp that should not be configurable for the board
 # itself. Default configurations could go here if that makes sense
+set(PROJECT_SOURCE_DIR_PATH "${PROJECT_SOURCE_DIR}")
 configure_file(config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp @ONLY)
 add_definitions(-include ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp)
 
@@ -24,11 +25,33 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-# Enable this to use picotool, and bebale to receive UART data over picotool
+# Enable this to use picotool, and beable to receive UART data over picotool
 set(OPENACE_UART_OVER_USB 0)
 
 add_compile_options(-Wall -fsingle-precision-constant -ffast-math)
 add_link_options(-Wl,--print-memory-usage)
+
+# Collect all .c/cpp/hpp/h files from the specified directory and its subdirectories
+file(GLOB_RECURSE C_SOURCE_FILES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/../lib/**/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../lib/**/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../lib/**/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../lib/**/*.cpp"
+)
+
+foreach(file ${C_SOURCE_FILES})
+    get_filename_component(dir ${file} DIRECTORY)
+    if("${dir}" MATCHES ".*/build(/.*)?")
+        list(REMOVE_ITEM C_SOURCE_FILES ${file})
+    endif()
+endforeach()
+
+message(${C_SOURCE_FILES}) 
+# Set for these files specific compile otions
+set_source_files_properties(${C_SOURCE_FILES} PROPERTIES
+    COMPILE_FLAGS "-Wall -Wextra -Werror"
+)
+
 
 # target_compile_definitions(TARGET PRIVATE PICO_DEFAULT_UART_TX_PIN=16
 # PICO_DEFAULT_UART_RX_PIN=17 )
@@ -65,7 +88,7 @@ target_link_libraries(${PROJECT_NAME}
           dump1090client
           wifiservice
           webserver
-          GpsDecoder
+          gpsdecoder
           rtc
           acespi
           bmp280
@@ -82,6 +105,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_compile_definitions(OpenAce PRIVATE FREE_RTOS_KERNEL_SMP=1
                                            portSUPPORT_SMP=1 OPENACE_UART_OVER_USB=${OPENACE_UART_OVER_USB})
+
 
 # Enable debugging over PICO Debugger
 if (OPENACE_UART_OVER_USB)

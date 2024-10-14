@@ -23,6 +23,7 @@ private:
 
     void on_receive_unknown(const etl::imessage& msg)
     {
+        (void)msg;
     }
 
     static void serialADSBTask(void *arg);
@@ -52,7 +53,7 @@ public:
 
     virtual void stop() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 
 
 };

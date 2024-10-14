@@ -27,8 +27,9 @@ void Gdl90Service::stop()
     }
 }
 
-void Gdl90Service::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Gdl90Service::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"heartbeatTx\":" << statistics.heartbeatTx;
     stream << ",\"ownshipPosTx\":" << statistics.ownshipPosTx;

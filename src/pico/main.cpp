@@ -91,6 +91,7 @@ public:
     static constexpr const etl::string_view NAME = "ModuleManager";
     ModuleManager(etl::imessage_bus &bus, const Configuration &config) : BaseModule(bus, NAME)
     {
+        (void)config;
     }
     virtual ~ModuleManager() = default;
     virtual OpenAce::PostConstruct postConstruct() override
@@ -101,6 +102,7 @@ public:
     virtual void stop() override {}
     void on_receive_unknown(const etl::imessage &msg)
     {
+        (void)msg;
     }
 };
 
@@ -211,6 +213,7 @@ static void load(const etl::string_view str, etl::imessage_bus &bus, const Confi
 
 static void loadModules(void *arch)
 {
+    (void)arch;
     load(WifiService::NAME, bus, config, true);
     load(ModuleManager::NAME, bus, config);
 

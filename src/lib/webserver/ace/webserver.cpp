@@ -53,6 +53,8 @@ err_t httpd_post_begin(void *connection, const char *uri, const char *http_reque
     LWIP_UNUSED_ARG(http_request_len);
     LWIP_UNUSED_ARG(content_len);
     LWIP_UNUSED_ARG(post_auto_wnd);
+    LWIP_UNUSED_ARG(response_uri);
+    LWIP_UNUSED_ARG(response_uri_len);
     if (strncmp(uri, CONFIGPATH, sizeof(CONFIGPATH) - 1) == 0)
     {
         if (RequestContext.current_connection != connection)
@@ -208,7 +210,8 @@ int fs_open_custom(fs_file *file, const char *name)
         return 0;
     }
 
-    // Test and handle captive portal
+    // TODO: Test and handle captive portal
+    // Was stable for iOS, but for Android it worked fine, but it didn't feel intuitive yet
     // if (handle_captive(file, path))
     // {
     //     return 1;
@@ -268,8 +271,9 @@ int fs_read_custom(struct fs_file *file, char *buffer, int count)
     return FS_READ_EOF;
 }
 
-void Webserver::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Webserver::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     const auto registeredModules = BaseModule::registeredModules();
     stream << "{";
     stream << "\"modules\":{";
@@ -306,4 +310,5 @@ void Webserver::stop()
 
 void Webserver::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }

@@ -210,7 +210,7 @@ public:
 
     virtual void stop() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 
     inline void sendToBus(OpenAce::RadioRxFrame &frame)
     {
@@ -219,6 +219,7 @@ public:
 
     void on_receive_unknown(const etl::imessage &msg)
     {
+        (void)msg;
     }
 
     void on_receive(const OpenAce::RadioTxFrame &msg);

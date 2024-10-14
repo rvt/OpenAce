@@ -133,6 +133,7 @@ public:
      */
     virtual void getData(etl::string_stream &stream, const etl::string_view path) const
     {
+        (void)path;
         stream << "{}";
     }
 
@@ -149,6 +150,8 @@ public:
      */
     virtual bool setData(const etl::string_view data, const etl::string_view path)
     {
+        (void)data;
+        (void)path;
         return false;
     }
 
@@ -286,6 +289,7 @@ public:
 
         constexpr RadioParameters(const Radio::ProtocolConfig &_config, uint32_t _frequency, int8_t _powerdBm) : config(_config), frequency(_frequency), powerdBm(_powerdBm) {}
         constexpr RadioParameters(const Radio::RadioParameters &_params) : config(_params.config), frequency(_params.frequency), powerdBm(_params.powerdBm) {}
+        RadioParameters& operator=(const RadioParameters& other) = default;
     };
 
     struct TxPacket

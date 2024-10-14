@@ -2,7 +2,6 @@
 
 #include "adsl.hpp"
 #include "ace/bitcount.hpp"
-#include "ace/utils.hpp"
 
 constexpr float POSITION_DECODE = 0.0001f / 60.f;
 constexpr float POSITION_ENDECODE = 1.f / POSITION_DECODE;
@@ -38,8 +37,9 @@ void ADSL::stop()
     vQueueDelete(frameConsumerQueue);
 };
 
-void ADSL::getData(etl::string_stream &stream, const etl::string_view optional) const
+void ADSL::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     for (const auto &stat : dataSourceTimeStats)
     {
@@ -312,7 +312,6 @@ int8_t ADSL::parseFrame(const ADSL_Packet &packet, int16_t rssiDbm)
             packet.getGroundSpeed(),
             static_cast<int16_t>(packet.getTrack()),
             0.0,
-            0.0f,
             static_cast<uint16_t>(fromOwn.distance),
             fromOwn.relNorth,
             fromOwn.relEast,

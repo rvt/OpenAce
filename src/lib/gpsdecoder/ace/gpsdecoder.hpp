@@ -62,6 +62,7 @@ private:
 
     void on_receive_unknown(const etl::imessage& msg)
     {
+        (void)msg;
     }
 public:
     static constexpr const etl::string_view NAME = "GpsDecoder";
@@ -72,6 +73,7 @@ public:
         lastRMCTimestamp({0,0,0,0}),
                      lastGGATimestamp({0,0,0,0})
     {
+        (void)config;
     }
 
     virtual ~GpsDecoder() = default;
@@ -81,5 +83,5 @@ public:
     virtual void start() override;
     virtual void stop() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 };

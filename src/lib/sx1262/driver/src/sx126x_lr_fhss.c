@@ -135,6 +135,7 @@ static inline unsigned int sx126x_lr_fhss_get_grid_in_pll_steps( const sx126x_lr
 
 sx126x_status_t sx126x_lr_fhss_init( const void* context, const sx126x_lr_fhss_params_t* params )
 {
+    (void)params;
     const uint8_t pkt_params_buf[] =
     {
         SX126X_SET_PKT_PARAMS, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -371,6 +372,8 @@ sx126x_status_t sx126x_lr_fhss_handle_hop( const void* context, const sx126x_lr_
 sx126x_status_t sx126x_lr_fhss_handle_tx_done( const void* context, const sx126x_lr_fhss_params_t* params,
     sx126x_lr_fhss_state_t* state )
 {
+    (void)params;
+    (void)state;
     const uint8_t ctrl = SX126X_LR_FHSS_DISABLE_HOPPING;
 
     return sx126x_write_register( context, SX126X_LR_FHSS_REG_CTRL, &ctrl, 1 );

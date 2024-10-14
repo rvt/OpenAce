@@ -90,11 +90,12 @@ public:
         currentZone(CountryRegulations::Zone::ZONE0),
         numRadios(0)
     {
+        (void)config;
     }
     virtual ~RadioTunerTx() = default;
 
     virtual OpenAce::PostConstruct postConstruct() override;
     virtual void start() override;
     virtual void stop() override;
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 };

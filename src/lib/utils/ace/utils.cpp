@@ -7,7 +7,7 @@ constexpr char spinChars[] = {'\\','\\', '|', '/', '/', '|'};
  * Find a free pio and state machine and load the program into it.
  * Returns false if this fails
 */
-bool add_pio_program(const pio_program_t *program, PIO *pio_hw, uint *sm, uint *offset)
+bool add_pio_program(const pio_program_t *program, PIO *pio_hw, int *sm, uint *offset)
 {
 #if defined(PICO_RP2040)
     *pio_hw = pio0;

@@ -48,6 +48,7 @@ public:
     static constexpr const etl::string_view NAME = "PicoRtc";
     PicoRtc(etl::imessage_bus& bus, const Configuration &config) :  RtcModule(bus), lastPpstime(0)
     {
+        (void)config;
     }
 
     virtual ~PicoRtc() = default;
@@ -60,5 +61,5 @@ public:
 
     virtual void stop() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 };

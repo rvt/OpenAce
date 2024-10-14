@@ -50,8 +50,9 @@ void RadioTunerTx::stop()
     txTasks.clear();
 };
 
-void RadioTunerTx::getData(etl::string_stream &stream, const etl::string_view optional) const
+void RadioTunerTx::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"protocols\":[";
     for (auto it = txTasks.cbegin(); it != txTasks.cend(); ++it)
@@ -224,4 +225,5 @@ void RadioTunerTx::enableDisableDatasources(const etl::ivector<OpenAce::DataSour
 
 void RadioTunerTx::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }

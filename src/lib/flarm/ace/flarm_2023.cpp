@@ -97,8 +97,9 @@ void Flarm::stop()
     vQueueDelete(frameConsumerQueue);
 };
 
-void Flarm::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Flarm::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     for(const auto &stat : dataSourceTimeStats)
     {
@@ -219,7 +220,6 @@ int8_t Flarm::parseFrame(uint32_t *packet, uint32_t epochSeconds, int16_t rssiDb
             (vsTwosCompl << flarmPacket->speedscale) * DPMS_TO_MS,
             speedM4S / 4.0f,                         // Speed was send as meters per 4 seconds/ scale back to m/s
             static_cast<int16_t>(track),
-            0.0f,
             0.0f,
             static_cast<uint16_t>(fromOwn.distance),
             fromOwn.relNorth,

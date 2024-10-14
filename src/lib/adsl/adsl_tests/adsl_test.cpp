@@ -13,9 +13,9 @@
 TEST_CASE( "hello", "[single-file]" )
 {
     ADSL_Packet packet;
-    printf("Size: %ld TxBytes: %d\n", sizeof(ADSL_Packet), ADSL_Packet::TxBytes);
+    printf("Size: %ld TxBytes: %d\n", sizeof(ADSL_Packet), ADSL_Packet::TotalTxBytes);
     REQUIRE( (sizeof(ADSL_Packet) == 27) );
-    REQUIRE( (ADSL_Packet::TxBytes == sizeof(ADSL_Packet) - 2) ); // ALLIGN is not send, thus - 2
+    REQUIRE( (ADSL_Packet::TotalTxBytes == sizeof(ADSL_Packet) - 2) ); // ALLIGN is not send, thus - 2
     REQUIRE( (packet.length == 24) ); // length is the packet excluding itself
 }
 
@@ -27,7 +27,7 @@ TEST_CASE( "Correct bit errors and get data", "[single-file]" )
     REQUIRE( (result == 3) );
 
     ADSL_Packet packet;
-    memcpy(&packet.length, frame, ADSL_Packet::TxBytes);
+    memcpy(&packet.length, frame, ADSL_Packet::TotalTxBytes);
     REQUIRE( (packet.checkCRC() == 0) );
 
     packet.Descramble();
@@ -86,6 +86,30 @@ TEST_CASE( "Getters and Setters", "[single-file]" )
 
     packet.setVerticalRate(5.25f);
     REQUIRE( packet.getVerticalRate() == Catch::Approx(5.25f) );
+
+    packet.verticalRate = (int16_t)0x000;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(0.f) );
+
+    packet.verticalRate = (int16_t)0x001;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(0.125f) );  // Differs slightly from spec
+
+    packet.verticalRate = 0x001;
+    packet.verticalRate |= 0x100;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(-0.125f) );  // Differs slightly from spec
+
+    packet.verticalRate = (int16_t)0x048;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(10.125f) );  // Differs slightly from spec
+
+    packet.verticalRate = 0x048;
+    packet.verticalRate |= 0x100;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(-10.125f) );  // Differs slightly from spec
+
+    packet.verticalRate = (int16_t)0x0ff;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(119.5f) );  // Differs slightly from spec
+
+    packet.verticalRate = 0x0ff;
+    packet.verticalRate |= 0x100;
+    REQUIRE( packet.getVerticalRate() == Catch::Approx(-119.5f) ); // Differs slightly from spec
 
     packet.setTrack(125.f);
     REQUIRE( packet.getTrack() == Catch::Approx(124.45312f) );

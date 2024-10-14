@@ -112,8 +112,9 @@ void Flarm2024::stop()
     vQueueDelete(frameConsumerQueue);
 };
 
-void Flarm2024::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Flarm2024::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     for (const auto &stat : dataSourceTimeStats)
     {
@@ -262,7 +263,6 @@ int8_t Flarm2024::parseFrame(uint32_t *packet, uint32_t epochSeconds, int16_t rs
             groundSpeed,
             static_cast<int16_t>(radioPacket->course >> 1),
             descale<6, 2, true>(radioPacket->turnRate) / 20.0f,
-            0.0f,
             static_cast<uint16_t>(fromOwn.distance),
             fromOwn.relNorth,
             fromOwn.relEast,
@@ -392,7 +392,8 @@ void Flarm2024::on_receive(const OpenAce::RadioTxPositionRequest &msg)
                 .gnssHorizontalAccuracy = 0b010010,                                                                                     // enscale<3, 2, false>((gpsStats.hDop*2+5)/10),
                 .gnssVerticalAccuracy = 0b01010,                                                                                        // enscale<2, 3, false>((gpsStats.pDop*2+5)/10),
                 .unknownData = 11,
-                .reserved8 = 0};
+                .reserved8 = 0,
+                .checksum = 0}; // Will get calculated later.
 
         uint32_t *data = reinterpret_cast<uint32_t *>(&radioPacket);
 

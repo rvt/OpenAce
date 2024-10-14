@@ -210,8 +210,8 @@ namespace OpenAce
         int32_t relEastFromOwn;   // relEast to ownship in meters
         int16_t bearingFromOwn;   // Bearing to ownship in degrees
 
-        AircraftPositionInfo(OpenAce::positionTs timestamp_, OpenAce::IcaoAddress icaoAddress_, AircraftAddress address_, AddressType addressType_, DataSource dataSource_, AircraftCategory aircraftType_, bool stealth_, bool noTrack_, bool airborne_, float lat_, float lon_, int32_t altitudeWgs84_, float verticalSpeed_, float groundSpeed_, int16_t course_, float hTurnRate_, float vTurnAngle_, uint32_t distance_, int32_t relNorth_, int32_t relEast_, int16_t bearingFromOwn_)
-            : timestamp(timestamp_), icaoAddress(icaoAddress_), address(address_), addressType(addressType_), dataSource(dataSource_), aircraftType(aircraftType_), stealth(stealth_), noTrack(noTrack_), airborne(airborne_), lat(lat_), lon(lon_), altitudeWgs84(altitudeWgs84_), verticalSpeed(verticalSpeed_), groundSpeed(groundSpeed_), course(course_), hTurnRate(hTurnRate_), distanceFromOwn(distance_), relNorthFromOwn(relNorth_), relEastFromOwn(relEast_), bearingFromOwn(bearingFromOwn_)
+        AircraftPositionInfo(OpenAce::positionTs timestamp_, OpenAce::IcaoAddress icaoAddress_, AircraftAddress address_, AddressType addressType_, DataSource dataSource_, AircraftCategory aircraftType_, bool stealth_, bool noTrack_, bool airborne_, float lat_, float lon_, int32_t altitudeWgs84_, float verticalSpeed_, float groundSpeed_, int16_t course_, float hTurnRate_, uint32_t distanceFromOwn_, int32_t relNorth_, int32_t relEast_, int16_t bearingFromOwn_)
+            : timestamp(timestamp_), icaoAddress(icaoAddress_), address(address_), addressType(addressType_), dataSource(dataSource_), aircraftType(aircraftType_), stealth(stealth_), noTrack(noTrack_), airborne(airborne_), lat(lat_), lon(lon_), altitudeWgs84(altitudeWgs84_), verticalSpeed(verticalSpeed_), groundSpeed(groundSpeed_), course(course_), hTurnRate(hTurnRate_), distanceFromOwn(distanceFromOwn_), relNorthFromOwn(relNorth_), relEastFromOwn(relEast_), bearingFromOwn(bearingFromOwn_)
         {
         }
         // Default constructor

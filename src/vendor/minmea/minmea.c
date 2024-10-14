@@ -281,7 +281,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
             case 'T': { // Time (int, int, int, int), -1 if empty.
                 struct minmea_time *time_ = va_arg(ap, struct minmea_time *);
 
-                int h = -1, i = -1, s = -1, u = -1;
+                int32_t h = -1, i = -1, s = -1, u = -1;
 
                 if (field && minmea_isfield(*field)) {
                     // Minimum required: integer time.
@@ -299,8 +299,8 @@ bool minmea_scan(const char *sentence, const char *format, ...)
 
                     // Extra: fractional time. Saved as microseconds.
                     if (*field++ == '.') {
-                        uint32_t value = 0;
-                        uint32_t scale = 1000000LU;
+                        int32_t value = 0;
+                        int32_t scale = 1000000LU;
                         while (isdigit((unsigned char) *field) && scale > 1) {
                             value = (value * 10) + (*field++ - '0');
                             scale /= 10;

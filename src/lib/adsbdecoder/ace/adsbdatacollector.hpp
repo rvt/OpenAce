@@ -48,13 +48,16 @@ struct AdsbCombinedDataStatus
         : icao(0), icaoAddress("-"), messageStatus(0), lastSeen(0),
           velocity(0.0f), category(0), heading(0), gnsAltitude(0), raw_even_latitude(0),
           raw_even_longitude(0), raw_odd_latitude(0), raw_odd_longitude(0), baro_gnss_diff(0),
-          lat(0.0f), lon(0.0f), vert_rate(0.0f), airborne(false), evict(false)
+          lat(0.0f), lon(0.0f), vert_rate_sign(0), vert_rate(0.0f), airborne(false), evict(false)
     {
     }
 
     // Constructor with icao for search functions.
     AdsbCombinedDataStatus(uint32_t icao_)
-        : icao(icao_)
+        : icao(icao_), icaoAddress("-"), messageStatus(0), lastSeen(0),
+          velocity(0.0f), category(0), heading(0), gnsAltitude(0), raw_even_latitude(0),
+          raw_even_longitude(0), raw_odd_latitude(0), raw_odd_longitude(0), baro_gnss_diff(0),
+          lat(0.0f), lon(0.0f), vert_rate_sign(0), vert_rate(0.0f), airborne(false), evict(false)
     {
     }
 
@@ -63,7 +66,7 @@ struct AdsbCombinedDataStatus
         : icao(icao_), icaoAddress("-"), messageStatus(0), lastSeen(lastSeen_),
           velocity(0.0f), category(0), heading(0), gnsAltitude(0), raw_even_latitude(0),
           raw_even_longitude(0), raw_odd_latitude(0), raw_odd_longitude(0), baro_gnss_diff(0),
-          lat(0.0f), lon(0.0f), vert_rate(0.0f), airborne(false), evict(false)
+          lat(0.0f), lon(0.0f), vert_rate_sign(0), vert_rate(0.0f), airborne(false), evict(false)
     {
     }
 };

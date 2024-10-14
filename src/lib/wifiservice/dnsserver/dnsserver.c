@@ -118,6 +118,7 @@ static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, 
 
 static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr, u16_t src_port)
 {
+    (void)upcb;
     dns_server_t *d = arg;
     DEBUG_printf("dns_server_process %u\n", p->tot_len);
 

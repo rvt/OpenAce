@@ -69,5 +69,5 @@ void AceSpi::aceSpiTask(void *arg)
 
 void AceSpi::on_receive_unknown(const etl::imessage& msg)
 {
-
+    (void)msg;
 }

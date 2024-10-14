@@ -70,8 +70,9 @@ OpenAce::PostConstruct SerialADSB::postConstruct()
     return OpenAce::PostConstruct::OK;
 }
 
-void SerialADSB::getData(etl::string_stream &stream, const etl::string_view optional) const
+void SerialADSB::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"totalReceived\":" << statistics.totalReceived;
     stream << "}\n";

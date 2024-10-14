@@ -69,8 +69,9 @@ void Dump1090Client::dump1090Task(void *arg)
     }
 }
 
-void Dump1090Client::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Dump1090Client::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"totalReceived\":" << statistics.totalReceived;
     stream << "}\n";

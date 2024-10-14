@@ -24,10 +24,12 @@ void Bmp280::on_receive(const OpenAce::ConfigUpdatedMsg& msg)
 
 void Bmp280::on_receive_unknown(const etl::imessage& msg)
 {
+    (void)msg;
 }
 
-void Bmp280::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Bmp280::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"lastPressurehPa\":" << etl::format_spec{}.precision(1) << statistics.lastPressurehPa<< OpenAce::RESET_FORMAT;
     stream << ",\"compensation\":" << compensation;

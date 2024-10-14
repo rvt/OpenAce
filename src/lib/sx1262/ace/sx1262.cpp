@@ -79,8 +79,9 @@ OpenAce::PostConstruct Sx1262::postConstruct()
     return OpenAce::PostConstruct::OK;
 }
 
-void Sx1262::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Sx1262::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"deviceErrors\":" << statistics.deviceErrors;
     stream << ",\"waitPacketTimeout\":" << statistics.waitPacketTimeout;
@@ -182,6 +183,7 @@ uint8_t Sx1262::receivedPacketLength() const
 
 bool Sx1262::applyNewLoraParameters(const Radio::ProtocolConfig &config)
 {
+    (void)config;
     // // Set the Sync Word
     // LoRa Sync Word, Differentiate the LoRa® signal for Public or Private Network
     uint8_t data[] = {0xF4, 0x14};

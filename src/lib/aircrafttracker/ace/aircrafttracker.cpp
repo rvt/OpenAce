@@ -50,10 +50,12 @@ void AircraftTracker::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
 
 void AircraftTracker::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }
 
-void AircraftTracker::getData(etl::string_stream &stream, const etl::string_view optional) const
+void AircraftTracker::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"queueFullErr\":" << statistics.queueFullErr;
     stream << ",\"trackedFullErr\":" << statistics.trackedFullErr;

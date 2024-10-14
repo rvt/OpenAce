@@ -45,8 +45,7 @@ OpenAce::RadioRxFrame, OpenAce::OwnshipPositionMsg, OpenAce::RadioTxPositionRequ
     static constexpr uint8_t BTEA_ROUNDS = 6;
 private:
 
-#pragma pack(push, 1)
-//    struct alignas(uint32_t) RadioPacket
+#pragma pack(push, 4)
     struct RadioPacket
     {
         uint32_t aircraftID : 24;            // Bits 0-23: aircraft ID
@@ -123,7 +122,7 @@ public:
     virtual OpenAce::PostConstruct postConstruct() override;
     virtual void start() override;
     virtual void stop() override;
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 private:
 
 
@@ -138,6 +137,7 @@ private:
 
     void on_receive_unknown(const etl::imessage& msg)
     {
+        (void)msg;
     }
 
     // Transform a FLARM addressType to an openAce address type

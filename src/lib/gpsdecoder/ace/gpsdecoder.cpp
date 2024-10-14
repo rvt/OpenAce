@@ -18,8 +18,9 @@ void GpsDecoder::stop()
     getBus().unsubscribe(*this);
 }
 
-void GpsDecoder::getData(etl::string_stream &stream, const etl::string_view optional) const
+void GpsDecoder::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     constexpr etl::format_spec width2fill0 = etl::format_spec().width(2).fill('0');
     const char *dopValue = OpenAce::DOPInterpretationToString(OpenAce::floatToDOPInterpretation(pDop));
     stream << "{";

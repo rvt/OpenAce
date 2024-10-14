@@ -38,6 +38,7 @@ public:
     }
     void on_receive_unknown(const etl::imessage &msg)
     {
+        (void)msg;
     }
 };
 
@@ -48,7 +49,7 @@ auto protocol = Radio::ProtocolConfig{Radio::Mode::GFSK, OpenAce::DataSource::FL
 
 TEST_CASE("RadioPacket size", "[single-file]")
 {
-    REQUIRE( sizeof(Flarm2024::RadioPacket) == Flarm2024::RadioPacket::totalLengthWCRC ); // this includes checksum + padding to ensure byte allinment
+    REQUIRE( sizeof(Flarm2024::RadioPacket) == Flarm2024::RadioPacket::totalLengthWCRC + 2 ); // this includes checksum + padding to ensure byte allinment
 }
 
 TEST_CASE("addressTypeToFlarm", "[single-file]")

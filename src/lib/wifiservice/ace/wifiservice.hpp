@@ -75,6 +75,8 @@ private:
     TaskHandle_t taskHandle;
     TimerHandle_t timerHandle;
 
+    uint8_t connectionAttempt; 
+
     // Producer Consumer queue to handle data between this task and the send task
     etl::set<OpenAce::SsidOrPasswdStr, 4> scanResult;
 
@@ -114,7 +116,8 @@ public:
         wifiData(config.wifiService()),
         connectionState(ConnectionState::START),
         taskHandle(nullptr),
-        timerHandle(nullptr)
+        timerHandle(nullptr),
+        connectionAttempt(1)
     {
     }
 

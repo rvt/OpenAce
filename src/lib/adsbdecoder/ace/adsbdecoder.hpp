@@ -69,7 +69,7 @@ public:
 
     virtual void stop() override;
 
-    virtual void getData(etl::string_stream &stream, const etl::string_view optional) const override;
+    virtual void getData(etl::string_stream &stream, const etl::string_view path) const override;
 
 private:
     void getConfiguration(const Configuration &config);
@@ -93,6 +93,6 @@ private:
 
     void on_receive_unknown(const etl::imessage &msg)
     {
-        // Ignore
+        (void)msg;
     }
 };

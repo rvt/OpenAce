@@ -64,8 +64,9 @@ OpenAce::PostConstruct GDLoverUDP::postConstruct()
     return OpenAce::PostConstruct::OK;
 }
 
-void GDLoverUDP::getData(etl::string_stream &stream, const etl::string_view optional) const
+void GDLoverUDP::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     stream << "\"heartbeatTx\":" << statistics.heartbeatTx;
     stream << ",\"bufferAllocErr\":" << statistics.bufferAllocErr;
@@ -75,6 +76,7 @@ void GDLoverUDP::getData(etl::string_stream &stream, const etl::string_view opti
 
 void GDLoverUDP::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }
 
 void GDLoverUDP::on_receive(const OpenAce::AccessPointClientsMsg &msg)

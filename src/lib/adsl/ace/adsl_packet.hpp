@@ -266,7 +266,7 @@ public:
     }
     float getVerticalRate() const
     {
-        if (verticalRate == 0x100)
+        if (verticalRate == -256)
         {
             return 0.f;
         }

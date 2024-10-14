@@ -33,6 +33,7 @@ void FlashStore::rewind()
 
 size_t FlashStore::write(uint8_t c)
 {
+    (void)c;
     panic("Operation of one byte not supported in FlashStore");
 }
 

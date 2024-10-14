@@ -43,8 +43,9 @@ void Ogn1::stop()
     vQueueDelete(frameConsumerQueue);
 };
 
-void Ogn1::getData(etl::string_stream &stream, const etl::string_view optional) const
+void Ogn1::getData(etl::string_stream &stream, const etl::string_view path) const
 {
+    (void)path;
     stream << "{";
     for (const auto &stat : dataSourceTimeStats)
     {
@@ -210,7 +211,6 @@ int8_t Ogn1::parseFrame(OGN1_Packet &packet, int16_t rssiDbm)
             speed0d1ms * .1f,
             static_cast<int16_t>(packet.DecodeHeading() * .1f),
             packet.DecodeTurnRate() * .1f,
-            0.0f,
             static_cast<uint16_t>(fromOwn.distance),
             fromOwn.relNorth,
             fromOwn.relEast,
@@ -361,4 +361,5 @@ void Ogn1::on_receive(const OpenAce::ConfigUpdatedMsg &msg)
 
 void Ogn1::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }

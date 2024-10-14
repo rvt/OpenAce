@@ -31,6 +31,7 @@ void WifiService::stop()
 
 void WifiService::on_receive_unknown(const etl::imessage &msg)
 {
+    (void)msg;
 }
 
 void WifiService::timerTask(TimerHandle_t timer)
@@ -218,7 +219,7 @@ bool WifiService::scanRunning()
 void WifiService::startWifiScan()
 {
     scanResult.empty();
-    cyw43_wifi_scan_options_t scan_options = {0};
+    cyw43_wifi_scan_options_t scan_options;
     cyw43_wifi_scan(&cyw43_state, &scan_options, (void *)this, scanResultCb);
 }
 
@@ -230,9 +231,8 @@ void WifiService::startWifiScan()
  */
 uint8_t WifiService::connectClient()
 {
-    const uint8_t NUMBER_OF_CONNECTION_ATTEMPTS = 3;
+    constexpr uint8_t NUMBER_OF_CONNECTION_ATTEMPTS = 3;
     // Keeps track of the number of connections to the same network
-    static uint8_t connectionAttempt = 1; 
     if (scanResult.empty())
     {
         return 1;
@@ -268,9 +268,8 @@ uint8_t WifiService::connectClient()
         if (connectionAttempt < NUMBER_OF_CONNECTION_ATTEMPTS)
         {
             connectionAttempt++;
-            return 1;
         }
-
+        return 1;
     default:
         connectionAttempt = 0;
         scanResult.erase(nameIt);
@@ -327,11 +326,11 @@ void WifiService::showSsidPwdIp(const etl::string_view &ssid, const etl::string_
     puts("###################################");
 }
 
-static void
-mdns_example_report(struct netif *netif, u8_t result, s8_t service)
-{
-    LWIP_PLATFORM_DIAG(("mdns status[netif %d][service %d]: %d\n", netif->num, service, result));
-}
+// static void
+// mdns_example_report(struct netif *netif, u8_t result, s8_t service)
+// {
+//     LWIP_PLATFORM_DIAG(("mdns status[netif %d][service %d]: %d\n", netif->num, service, result));
+// }
 
 #if LWIP_MDNS_RESPONDER == 1
 

@@ -91,6 +91,7 @@ private:
     typedef err_t (*tcp_connected_fn)(void *arg, struct tcp_pcb *tpcb, err_t err);
     static err_t tcp_client_connected(void *arg, struct tcp_pcb *tpcb, err_t err)
     {
+        (void)tpcb;
         // TcpClient *state = (TcpClient *)arg;
         if (err != ERR_OK)
         {

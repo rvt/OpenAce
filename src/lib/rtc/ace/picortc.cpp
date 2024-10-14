@@ -2,9 +2,9 @@
 
 
 
-void PicoRtc::getData(etl::string_stream &stream, const etl::string_view optional) const
-{
-
+void PicoRtc::getData(etl::string_stream &stream, const etl::string_view path) const
+{   
+    (void)path;
     stream << "{";
     stream << "\"epochSet\":" << statistics.epochSet;
     stream << ",\"delayUs\":" << statistics.delayUs;
@@ -83,6 +83,7 @@ void PicoRtc::on_receive(const OpenAce::GpsTime& msg)
         .tm_mday = msg.day,          // Day of the month
         .tm_mon = msg.month - 1,     // Months since January (0-based)
         .tm_year = msg.year - 1900,  // Years since 1900
+        .tm_wday = 0,
         .tm_yday = 0,
         .tm_isdst = 0
     };
@@ -106,4 +107,5 @@ void PicoRtc::on_receive(const OpenAce::GpsTime& msg)
 
 void PicoRtc::on_receive_unknown(const etl::imessage& msg)
 {
+    (void)msg;
 }
