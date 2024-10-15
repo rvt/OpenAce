@@ -1,0 +1,16 @@
+{
+    "fileFormatVersion": "1",
+    "parameterSets": {
+        "TopGNSS": {
+            "ANTENNA_CLERARANCE": "1",
+            "BHEIGHT": "5.5",
+            "CAP_POSITION": "10.5",
+            "CROP": "false",
+            "DIAMETER": "37",
+            "FRICTION_RING": "true",
+            "HINGE_ANGLE": "23",
+            "MODULE": "TOPGNSS",
+            "THEIGHT": "17"
+        }
+    }
+}
