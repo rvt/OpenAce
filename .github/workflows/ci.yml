@@ -30,7 +30,7 @@ jobs:
           test: 'true'
 
     # action.yml
-  Build_by_Docker:
+  Docker:
     runs-on: ubuntu-latest
 
     # Run a local registry to push to
@@ -44,11 +44,6 @@ jobs:
       TEST_TAG: localhost:5001/actions/openace-build:latest
 
     steps:
-      - name: Checkout OpenAce
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
       - name: Setup Docker BuildX
         id: setup-buildx
         uses: docker/setup-buildx-action@v3
@@ -66,13 +61,9 @@ jobs:
 
       - name: Run the Container
         id: run
-        env:
-          INPUT_WHO_TO_GREET: Mona Lisa Octocat
         run: |
           cd src
-          docker run \
-            --env INPUT_WHO_TO_GREET="${{ env.INPUT_WHO_TO_GREET }}" \
-            --rm ${{ env.TEST_TAG }}
+          docker run --rm -v $(pwd):/opt/src openace-build-image
 
   Firmware:
     runs-on: ubuntu-latest
