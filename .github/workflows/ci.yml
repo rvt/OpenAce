@@ -44,6 +44,11 @@ jobs:
       TEST_TAG: localhost:5001/actions/openace-build:latest
 
     steps:
+      - name: Checkout OpenAce
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
       - name: Install Dependencies
         shell: bash
         run: |
