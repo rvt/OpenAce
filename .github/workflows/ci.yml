@@ -74,7 +74,7 @@ jobs:
         run: |
           tree -d -L 3
           cd src
-          docker run --rm -v $(pwd):/opt/src openace-build-image
+          docker run --rm -v $(pwd):/opt/src ${{ env.TEST_TAG }}
 
   Firmware:
     runs-on: ubuntu-latest
