@@ -29,9 +29,10 @@ jobs:
         with:
           test: 'true'
 
-    # action.yml
   Docker:
     runs-on: ubuntu-latest
+
+    name: Test build in Docker container
 
     # Run a local registry to push to
     services:
