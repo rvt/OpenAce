@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 set(OPTMIZE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/external/optimizejson.py
                    openace_default_config.json default_config.hpp)
 execute_process(
-  COMMAND python ${OPTMIZE_SCRIPT}
+  COMMAND ${OPTMIZE_SCRIPT}
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} ECHO_OUTPUT_VARIABLE
                     ECHO_ERROR_VARIABLE)
 
