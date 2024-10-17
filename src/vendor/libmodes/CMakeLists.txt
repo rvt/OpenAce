@@ -18,7 +18,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE
     ${PROJECT_NAME} PUBLIC include
 )
 
-message("## Including ${CMAKE_CURRENT_LIST_DIR}")
+message("Vendor Including ${CMAKE_CURRENT_LIST_DIR}")
 
 target_link_libraries(${PROJECT_NAME} INTERFACE)
 
