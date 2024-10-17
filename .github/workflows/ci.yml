@@ -10,6 +10,7 @@ on:
 
 jobs:
   Test:
+    name: Run the unit tests
     runs-on: ubuntu-latest
 
     steps:
@@ -30,9 +31,8 @@ jobs:
           test: 'true'
 
   Docker:
-    runs-on: ubuntu-latest
-
     name: Test build in Docker container
+    runs-on: ubuntu-latest
 
     # Run a local registry to push to
     services:
@@ -78,6 +78,7 @@ jobs:
           docker run --rm -v $(pwd):/opt/src ${{ env.TEST_TAG }}
 
   Firmware:
+    name: Create Firmware
     runs-on: ubuntu-latest
 
     steps:
