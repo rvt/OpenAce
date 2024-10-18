@@ -4,11 +4,11 @@
         "TopGNSS": {
             "ANTENNA_CLERARANCE": "1",
             "BHEIGHT": "5.5",
-            "CAP_POSITION": "10.5",
+            "CAP_POSITION": "14.5",
             "CROP": "false",
-            "DIAMETER": "37",
+            "DIAMETER": "36",
             "FRICTION_RING": "true",
-            "HINGE_ANGLE": "23",
+            "HINGE_ANGLE": "1",
             "MODULE": "TOPGNSS",
             "THEIGHT": "17"
         }

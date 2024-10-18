@@ -59,11 +59,17 @@ Note: You could also use them on your OGN station instead of a wip antenna
 > **_WARN:**
 > To print in prusa set _Print settings → Support material → Don't support bridges._
 
-There are two way's to use GPS in OpenAce. An external 'pug' antenna with SMA connector, or an rotatable cermaic GPS antenna that can be mounted on the enclosure itself.
-What GPS antenna to use when can be found in the build instructions.
+There are two way's to use GPS in OpenAce. An external 'pug' antenna with SMA connector, or an rotatable ceramic
+GPS antenna that can be mounted on the enclosure itself. What GPS antenna to use when can be found in the build instructions.
+This design is for the GPS antenna attached to the case. This is ideal for situations where OpenAce has clear view
+of the sky mounted upright, or horizontal.
+
+The below screenshots are of the Antenna with aN [TopGNSS Gps Galileo Glonass Beidou](https://nl.aliexpress.com/item/1005002475354983.html) ceramic Antenna.
 
 ![Prusa Printing](../doc/img/gps-antenna-holder.png).
 
-How to print in [PrusaSlicer](https://www.prusa3d.com/page/prusaslicer_424/)
-![Prusa Printing](../doc/img/gpsantenna-prusa.png).
+Parts setup in [PrusaSlicer](https://www.prusa3d.com/page/prusaslicer_424/) example:
+
+
+![Prusa Printing](../doc/img/gps-antenna-prusa.png).
 
