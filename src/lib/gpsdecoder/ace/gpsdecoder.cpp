@@ -3,6 +3,8 @@
 #include "gpsdecoder.hpp"
 #include "ace/moreutils.hpp"
 
+extern const char* buildTime;
+
 OpenAce::PostConstruct GpsDecoder::postConstruct()
 {
     return OpenAce::PostConstruct::OK;
@@ -24,7 +26,8 @@ void GpsDecoder::getData(etl::string_stream &stream, const etl::string_view path
     constexpr etl::format_spec width2fill0 = etl::format_spec().width(2).fill('0');
     const char *dopValue = OpenAce::DOPInterpretationToString(OpenAce::floatToDOPInterpretation(pDop));
     stream << "{";
-    stream << "\"receivedGGA\":" << statistics.receivedGGA;
+    stream << "\"buildTime\": \"" << buildTime << "\"";
+    stream << ",\"receivedGGA\":" << statistics.receivedGGA;
     stream << ",\"receivedRMC\":" << statistics.receivedRMC;
     stream << ",\"receivedGSA\":" << statistics.receivedGSA;
     stream << ",\"receivedOther\":" << statistics.receivedOther;

@@ -163,7 +163,8 @@ bool PioSerial::sendBlocking(uint32_t givenBaudRate, const uint8_t *data, uint16
 
     if (!add_pio_program(&uart_tx_program, &txPio, &txSmIndx, &txOffset))
     {
-        panic("failed to setup pio for tx");
+        puts("failed to setup pio for tx");
+        return false;
     }
     uart_tx_program_init(txPio, txSmIndx, txOffset, txPin, givenBaudRate);
     uart_tx_program_put(txPio, txSmIndx, data, length);
@@ -173,8 +174,7 @@ bool PioSerial::sendBlocking(uint32_t givenBaudRate, const uint8_t *data, uint16
 
 bool PioSerial::sendBlocking(const uint8_t *data, uint16_t length)
 {
-    sendBlocking(baudrate, data, length);
-    return true;
+    return sendBlocking(baudrate, data, length);
 }
 
 bool PioSerial::setBaudRate(uint32_t baudRate)

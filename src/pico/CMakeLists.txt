@@ -9,9 +9,11 @@ execute_process(
 
 # All defines go in config.hpp that should not be configurable for the board
 # itself. Default configurations could go here if that makes sense
+string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M:%SZ" UTC)
 set(PROJECT_SOURCE_DIR_PATH "${PROJECT_SOURCE_DIR}")
 configure_file(config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp @ONLY)
 add_definitions(-include ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp)
+add_definitions(-DBUILD_TIME="${BUILD_TIME}")
 
 set(PICO_BOARD pico_w)
 

@@ -102,16 +102,9 @@ class WifiServiceConfig extends ModuleConfig {
         });
       });
 
-      this.clientsIds.forEach(idx => {
-        validator
-        .addField(this.$refs[`apssid_${idx}`], [
-          ...ssidValidation,
-        ])
-        .addField(this.$refs[`appassword_${idx}`], [
-          ...passwordValidation,
-        ])
-      })
-
+    this.clientsIds.forEach((idx) => {
+      validator.addField(this.$refs[`apssid_${idx}`], [...ssidValidation]).addField(this.$refs[`appassword_${idx}`], [...passwordValidation]);
+    });
   }
 
   _setFormData(data) {
@@ -126,9 +119,9 @@ class WifiServiceConfig extends ModuleConfig {
 
     // Get Clients
     if (data != null && data.clients != null) {
-      data.clients.forEach( (client, idx) => {
-        console.log(idx)
-        console.log(JSON.stringify(client))
+      data.clients.forEach((client, idx) => {
+        console.log(idx);
+        console.log(JSON.stringify(client));
         this.$refs[`apssid_${idx}`].value = client.ssid;
         this.$refs[`appassword_${idx}`].value = client.password;
       });
@@ -137,18 +130,18 @@ class WifiServiceConfig extends ModuleConfig {
 
   _getFormData() {
     let clients = [];
-    this.clientsIds.forEach(idx => {
+    this.clientsIds.forEach((idx) => {
       if (this.$refs[`apssid_${idx}`].value && this.$refs[`appassword_${idx}`].value) {
-        clients.push({ssid: this.$refs[`apssid_${idx}`].value, password: this.$refs[`appassword_${idx}`].value});
+        clients.push({ ssid: this.$refs[`apssid_${idx}`].value, password: this.$refs[`appassword_${idx}`].value });
       }
-    })
+    });
 
     return {
       ap: {
         ssid: this.$refs.apssid.value,
         password: this.$refs.appassword.value,
       },
-      clients: clients
+      clients: clients,
     };
   }
 

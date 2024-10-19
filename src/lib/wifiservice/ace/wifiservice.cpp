@@ -42,6 +42,8 @@ void WifiService::timerTask(TimerHandle_t timer)
 
 void WifiService::wifiTask(void *arg)
 {
+    uint32_t startScan=0;
+
     WifiService *wifiService = (WifiService *)arg;
     while (true)
     {
@@ -71,6 +73,7 @@ void WifiService::wifiTask(void *arg)
                 break;
 
             case ConnectionState::WIFISCAN:
+                startScan = CoreUtils::msSinceBoot();
                 wifiService->startWifiScan();
                 wifiService->connectionState = ConnectionState::WIFISCANNING;
                 break;
@@ -80,6 +83,12 @@ void WifiService::wifiTask(void *arg)
                 {
                     wifiService->connectionState = ConnectionState::TRYCLIENTCONNECT;
                 }
+                // If for whatever reason WIFI scan does not find any network, then stop scanning after OPENACE_WIFISERVICE_MAX_SCAN_TIME_MS
+                if (CoreUtils::msElapsed(startScan) > OPENACE_WIFISERVICE_MAX_SCAN_TIME_MS) {
+                    wifiService->connectionState = ConnectionState::APMODESTART;
+                    cyw43_wifi_leave(&cyw43_state, 0);
+                    wifiService->disableSta();
+                    wifiService->connectionState = ConnectionState::APMODESTART;                }
                 break;
 
             case ConnectionState::TRYCLIENTCONNECT:
@@ -162,10 +171,10 @@ void WifiService::accessPointConnectionScanner()
 
 void WifiService::startAccessPoint()
 {
+    // puts("Starting access point");
     cyw43_arch_enable_ap_mode(wifiData.ap.ssid.c_str(), wifiData.ap.password.c_str(), CYW43_AUTH_WPA2_AES_PSK);
     //    cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
 
-    // TODO: Take these from the config, eg don't hard code
     ip4_addr_t mask;
     ip_addr_t gw;
     IP4_ADDR(ip_2_ip4(&gw), 192, 168, 1, 1);
@@ -188,6 +197,7 @@ int WifiService::scanResultCb(void *env, const cyw43_ev_scan_result_t *result)
 {
     if (result)
     {
+        // puts("Scan Result received");
         WifiService *service = (WifiService *)env;
         OpenAce::SsidOrPasswdStr name = (char *)result->ssid;
 
@@ -199,7 +209,7 @@ int WifiService::scanResultCb(void *env, const cyw43_ev_scan_result_t *result)
 
         if (it != service->wifiData.clients.end() && !service->scanResult.full())
         {
-            //            printf("Added: %s\n", name.c_str());
+            // printf("Added: %s\n", name.c_str());
             service->scanResult.insert(name);
         }
 
@@ -220,11 +230,12 @@ void WifiService::startWifiScan()
 {
     scanResult.empty();
     cyw43_wifi_scan_options_t scan_options;
+    memset(&scan_options, 0, sizeof(cyw43_wifi_scan_options_t));
     cyw43_wifi_scan(&cyw43_state, &scan_options, (void *)this, scanResultCb);
 }
 
 /**
- * Try to connect to a cluent
+ * Try to connect to a client
  * returns
  *  0 Connection OK
  *  1 No Connection
@@ -252,7 +263,7 @@ uint8_t WifiService::connectClient()
         return 1;
     }
 
-    //    printf("WifiService: Connecting %s %s\n", it->ssid.c_str(), "<hidden>");
+    printf("WifiService: Client Connecting %s %s\n", it->ssid.c_str(), "<hidden>");
     auto result = cyw43_arch_wifi_connect_timeout_ms(it->ssid.c_str(), it->password.c_str(), CYW43_AUTH_WPA2_AES_PSK, 10000);
     //    printf("Result: %d\n", result);
     switch (result)

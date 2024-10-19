@@ -59,6 +59,8 @@
 
 #include "default_config.hpp"
 
+const char* buildTime = BUILD_TIME;
+
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */
 void vApplicationMallocFailedHook(void);
@@ -84,6 +86,9 @@ uint32_t getFreeHeap(void)
     return getTotalHeap() - m.uordblks;
 }
 
+/**
+ * Module Manager will be responsible at a later stage to re-load modules during runtime
+ */
 class ModuleManager : public BaseModule, public etl::message_router<ModuleManager>
 {
 
@@ -275,6 +280,7 @@ void vLaunch(void)
     // Bootstap
     BaseModule::initBase();
     registerModules();
+    puts("--");
     auto status = config.postConstruct();
     BaseModule::setModuleStatus(Configuration::NAME, &config, status);
     BaseModule::setModuleStatus(Config::NAME, &config, status);

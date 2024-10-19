@@ -21,7 +21,6 @@ All files in the `SystemGUI/dist` directory are automatically packaged into `src
 5. To start development, run `npm start`. Changes made to the code will be instantly reflected on the UI.
 6. Once development is complete, run `npm run build` to generate a distribution in the `dist` directory. Rebuilding OpenAce with `cmake` will include the necessary UI files.
 
-
 # Files
 
 - `.proxyrc.js` proxy setting to direct API calls to OpenAce for hot re-loading en testing of the UI

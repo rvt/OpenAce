@@ -36,7 +36,6 @@
 // https://github.com/raspberrypi/pico-sdk/issues/1443
 #define PICO_MAX_SHARED_IRQ_HANDLERS 6
 
-
 // START: ***** Debugging PICO items
 // https://github.com/raspberrypi/pico-sdk/blob/master/src/boards/include/boards/pico_w.h
 #ifndef NDEBUG
@@ -93,7 +92,8 @@
 // Maximum time to wait untill busy pin is low
 // According to manual only after cold starts this is 3500us (SLEEP to STBY_RC cold start (no data retention)
 // 4ms to be on the safe side
-#define OPENACE_SX1261_MAX_BUSY_WAIT_TIME_US 3500
+#define OPENACE_SX1261_MAX_BUSY_WAIT_TIME_MS 4
+
 // Time set for SetRX() in ms
 #define OPENACE_SX126X_MAX_RX_TIME  10000
 
@@ -127,3 +127,6 @@
 
 // Maximum radios that can be controlled
 #define OPEN_ACE_MAX_RADIOS ( 2 ) 
+
+// Maximum time the system will start scanning. If a scan result was found, then scanning will stop  aswell.
+#define OPENACE_WIFISERVICE_MAX_SCAN_TIME_MS 10000

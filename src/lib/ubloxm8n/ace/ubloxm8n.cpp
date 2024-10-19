@@ -53,7 +53,7 @@ inline constexpr uint8_t *UbloxM8N_m8nConfig[UbloxM8N_m8nConfig_size] = {
     //             0xDE, 0xEF},
 
     (uint8_t[]){44,
-                0xB5, 0x62, 0x06, 0x3E, 0x24, 0x00, 0x00, 0x00, 0x20, 0x04, // CFG_GNSS COnfig GPS 8-16, SBAS 1-3, Gal 4-8, Glonass 4-12
+                0xB5, 0x62, 0x06, 0x3E, 0x24, 0x00, 0x00, 0x00, 0x20, 0x04, // CFG_GNSS Config GPS 8-16, SBAS 1-3, Gal 4-8, Glonass 4-12
                 0x00, 0x08, 0x10, 0x00, 0x01, 0x00, 0x00, 0x01,
                 0x01, 0x01, 0x03, 0x00, 0x01, 0x00, 0x00, 0x01,
                 0x02, 0x04, 0x08, 0x00, 0x01, 0x00, 0x00, 0x01,
@@ -166,11 +166,13 @@ bool UbloxM8N::detectAndConfigureGPS()
     {
         statistics.status = "Found";
         // printf("GPS found at %ldBd setting to %ldBd, waiting for GPS to come back on... ", scanBaudRate, GPS_BAUDRATE);
-        // RVT: when we use rxFlush we read a few characters from the uart which seems to be enough to get the GPS to respond?
-        // @todo Need to understand this better because sometimes the GPS still fails to be detected
-        pioSerial.sendBlocking(scanBaudRate, UbloxM8N_baudrate, sizeof(UbloxM8N_baudrate));
+        if (!pioSerial.sendBlocking(scanBaudRate, UbloxM8N_baudrate, sizeof(UbloxM8N_baudrate))) {
+            return false;
+        }
         pioSerial.rxFlush(100);
-        pioSerial.sendBlocking(scanBaudRate, UbloxM8N_warmstart, sizeof(UbloxM8N_warmstart));
+        if (!pioSerial.sendBlocking(scanBaudRate, UbloxM8N_warmstart, sizeof(UbloxM8N_warmstart))) {
+            return false;
+        }
         pioSerial.rxFlush(100);
         for (uint8_t i = 0; i < 60; i++)
         {
@@ -197,7 +199,9 @@ bool UbloxM8N::detectAndConfigureGPS()
     // Configure GPS
     for (uint8_t i = 0; i < UbloxM8N_m8nConfig_size; i++)
     {
-        pioSerial.sendBlocking(GPS_BAUDRATE, &UbloxM8N_m8nConfig[i][1], UbloxM8N_m8nConfig[i][0]);
+        if (!pioSerial.sendBlocking(GPS_BAUDRATE, &UbloxM8N_m8nConfig[i][1], UbloxM8N_m8nConfig[i][0])) {
+            return false;
+        }
         pioSerial.rxFlush(100);
     }
 

@@ -175,28 +175,26 @@ export class OpenAceStore {
    * @returns
    */
   fetch(path, requestOptions) {
-    return (
-      fetch(path, {
-        ...requestOptions,
-        signal: AbortSignal.timeout(2500),
+    return fetch(path, {
+      ...requestOptions,
+      signal: AbortSignal.timeout(2500),
+    })
+      .then((response) => {
+        if (path.includes("SaveBR.json")) {
+          this.state.configModified = false;
+        } else if (["POST", "DELETE", "PATCH"].includes(requestOptions?.method)) {
+          this.state.configModified = true;
+        }
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        this.state.connected = true;
+        return response.json();
       })
-        .then((response) => {
-          if (path.includes("SaveBR.json")) {
-            this.state.configModified = false;
-          } else if (["POST", "DELETE", "PATCH"].includes(requestOptions?.method)) {
-            this.state.configModified = true;
-          }
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          this.state.connected = true;
-          return response.json();
-        })
-        .catch((e) => {
-          this.state.connected = false;
-          throw new Error();
-        })
-    );
+      .catch((e) => {
+        this.state.connected = false;
+        throw new Error();
+      });
   }
 }
 
