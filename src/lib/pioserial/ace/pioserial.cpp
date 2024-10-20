@@ -26,15 +26,14 @@ OpenAce::PostConstruct PioSerial::postConstruct()
     gpio_set_dir(txPin, GPIO_OUT);
     gpio_put(txPin, 1);
 
-    // Set up the state machine to use to use
-    if (!add_pio_program(&uart_rx_program, &pio, &smIndx, &offset))
+    // Enable Rx
+    if (!enableRx())
     {
         return OpenAce::PostConstruct::HARDWARE_ERROR;
     }
-    uart_rx_program_init(pio, smIndx, offset, rxPin, baudrate);
 
     static_assert(PIO0_IRQ_1 == PIO0_IRQ_0 + 1 && PIO1_IRQ_1 == PIO1_IRQ_0 + 1, "");
-    uint8_t pio_irq = (pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0; // pio_irq will become 7,8,9,10
+    uint8_t pio_irq = (rxPio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0; // pio_irq will become 7,8,9,10
     if (irq_get_exclusive_handler(pio_irq))
     {
         pio_irq++;
@@ -73,39 +72,61 @@ QueueHandle_t PioSerial::getHandle() const
 void PioSerial::start()
 {
     // Enable interrupt
-    uint8_t pio_irq = (pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0; // pio_irq will become 7,8,9,10
-    uint8_t irq_index = pio_irq - ((pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0);
+    uint8_t pio_irq = (rxPio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0; // pio_irq will become 7,8,9,10
+    uint8_t irq_index = pio_irq - ((rxPio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0);
     irq_add_shared_handler(pio_irq, handler, PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY); // Add a shared IRQ handler
     irq_set_enabled(pio_irq, true); // Enable the IRQ
-    pio_set_irqn_source_enabled(pio, irq_index, static_cast<pio_interrupt_source>(pis_sm0_rx_fifo_not_empty + smIndx), true); // Set pio to tell us when the FIFO is NOT empty
+    pio_set_irqn_source_enabled(rxPio, irq_index, static_cast<pio_interrupt_source>(pis_sm0_rx_fifo_not_empty + rxSmIndx), true); // Set pio to tell us when the FIFO is NOT empty
 };
 
 void PioSerial::stop()
 {
-
-    uint8_t pio_irq = (pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0; // pio_irq will become 7,8,9,10
-    uint8_t irq_index = pio_irq - ((pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0);
+    uint8_t pio_irq = (rxPio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0; // pio_irq will become 7,8,9,10
+    uint8_t irq_index = pio_irq - ((rxPio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0);
 
     // Disable interrupt
-    pio_set_irqn_source_enabled(pio, irq_index, static_cast<pio_interrupt_source>(pis_sm0_rx_fifo_not_empty + smIndx), false);
+    pio_set_irqn_source_enabled(rxPio, irq_index, static_cast<pio_interrupt_source>(pis_sm0_rx_fifo_not_empty + rxSmIndx), false);
     irq_set_enabled(pio_irq, false);
     irq_remove_handler(pio_irq, handler);
 
-    // Cleanup pio
-    pio_sm_set_enabled(pio, smIndx, false);
-    pio_remove_program(pio, &uart_rx_program, offset);
-    pio_sm_unclaim(pio, smIndx);
+    // Disable Rx
+    disableRx();
 
-    // Remove the handler
-    smIndx = -1;
-    offset = -1;
-    pio_irq = -1;
-    interruptHandlers[handlerIdx] = nullptr;
+    // Disable Tx
+    disableTx();
 
     vQueueDelete(xQueue);
     xQueue = nullptr;
 };
 
+
+bool PioSerial::enableRx() {
+
+    if ( rxPio == nullptr) {
+    // Set up the state machine to use to use
+        if (!add_pio_program(&uart_rx_program, &rxPio, &rxSmIndx, &rxOffset))
+        {
+            return false;
+        }
+        uart_rx_program_init(rxPio, rxSmIndx, rxOffset, rxPin, baudrate);
+    }
+    return true;
+}
+
+
+void PioSerial::disableRx() {
+
+    if (rxPio != nullptr) {
+        // Cleanup Pio
+        pio_sm_set_enabled(rxPio, rxSmIndx, false);
+        pio_remove_program(rxPio, &uart_rx_program, rxOffset);
+        pio_sm_unclaim(rxPio, rxSmIndx);
+
+        // Remove the handler
+        rxSmIndx = -1;
+        rxOffset = 0;
+    }
+}
 
 /**
  * IRQ called when the pio fifo is not empty, i.e. there are some characters on the uart
@@ -117,9 +138,9 @@ void PioSerial::pio_irq_func(uint8_t irqHandlerIndex)
     PioSerial &pioSerial = *interruptHandlers[irqHandlerIndex];
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    while (!pio_sm_is_rx_fifo_empty(pioSerial.pio, pioSerial.smIndx))
+    while (!pio_sm_is_rx_fifo_empty(pioSerial.rxPio, pioSerial.rxSmIndx))
     {
-        char c = uart_rx_program_getc(pioSerial.pio, pioSerial.smIndx);
+        char c = uart_rx_program_getc(pioSerial.rxPio, pioSerial.rxSmIndx);
         if (pioSerial.charIndex >= OpenAce::NMEA_MAX_LENGTH)
         {
             // @todo I don't think we need this anymore
@@ -143,46 +164,43 @@ void PioSerial::pio_irq_func(uint8_t irqHandlerIndex)
     portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
 }
 
-/**
- * Send that to the uart using blocking IO
- * At least one PIO needs to be available
- * Note: Don't use this for continues sending of data. This is only for sending a few bytes occasionally,
- * use an hardware uart for that.
- * If it's really needed we should add the code for continues sending of data, but it will claim a PIO for that
- *
- * @param data
- * @param length
- * @param baudRate
- * @return true if the data was sent
-*/
-bool PioSerial::sendBlocking(uint32_t givenBaudRate, const uint8_t *data, uint16_t length)
+void PioSerial::sendBlocking(const uint8_t *data, uint16_t length)
 {
-    PIO txPio;
-    int txSmIndx;
-    uint txOffset;
+    uart_tx_program_put(txPio, txSmIndx, data, length);
+}
 
-    if (!add_pio_program(&uart_tx_program, &txPio, &txSmIndx, &txOffset))
+bool PioSerial::enableTx(uint32_t givenBaudRate) {
+    if (txPio == nullptr) 
     {
-        puts("failed to setup pio for tx");
-        return false;
+        if (!add_pio_program(&uart_tx_program, &txPio, &txSmIndx, &txOffset))
+        {
+            puts("failed to setup pio for tx");
+            return false;
+        }
     }
     uart_tx_program_init(txPio, txSmIndx, txOffset, txPin, givenBaudRate);
-    uart_tx_program_put(txPio, txSmIndx, data, length);
-    pio_sm_unclaim(txPio, txSmIndx);
     return true;
 }
 
-bool PioSerial::sendBlocking(const uint8_t *data, uint16_t length)
-{
-    return sendBlocking(baudrate, data, length);
+void PioSerial::disableTx() {
+    if (txPio != nullptr) 
+    {
+        pio_sm_set_enabled(txPio, txSmIndx, false);
+        pio_remove_program(txPio, &uart_tx_program, txOffset);
+        pio_sm_unclaim(txPio, txSmIndx);
+
+        txPio = nullptr;
+        txOffset = 0;
+        txSmIndx = 0;
+    }
 }
 
 bool PioSerial::setBaudRate(uint32_t baudRate)
 {
-    if(pio!=nullptr)
+    if (rxPio!=nullptr)
     {
-        pio_sm_set_enabled(pio, smIndx, false);
-        uart_rx_program_init(pio, smIndx, offset, rxPin, baudRate);
+        pio_sm_set_enabled(rxPio, rxSmIndx, false);
+        uart_rx_program_init(rxPio, rxSmIndx, rxOffset, rxPin, baudRate);
         return true;
     }
     return false;
@@ -193,10 +211,10 @@ bool PioSerial::setBaudRate(uint32_t baudRate)
 */
 bool PioSerial::testUartAtBaudrate(uint32_t testBaudRate, uint32_t maximumScanTimeMs, uint32_t ignoreFirstMs, uint16_t numcharsConsideringValid)
 {
-    if(pio!=nullptr)
+    if (rxPio!=nullptr)
     {
         setBaudRate(testBaudRate);
-        bool hasData = uart_rx_program_test(pio, smIndx, 0x0a, 0x80, maximumScanTimeMs, ignoreFirstMs, numcharsConsideringValid);
+        bool hasData = uart_rx_program_test(rxPio, rxSmIndx, 0x0a, 0x80, maximumScanTimeMs, ignoreFirstMs, numcharsConsideringValid);
         setBaudRate(baudrate);
         return hasData;
     }
@@ -221,6 +239,6 @@ uint32_t PioSerial::findBaudRate(uint32_t maxTimeOutMs)
 
 bool PioSerial::rxFlush(uint32_t timeOut)
 {
-    return uart_rx_flush(pio, smIndx, timeOut);
+    return uart_rx_flush(rxPio, rxSmIndx, timeOut);
 }
 

@@ -65,24 +65,33 @@ class PioSerial
     const uint8_t txPin;
     const uint32_t baudrate;
 
-    PIO pio;
-    int smIndx;
-    uint offset;
+    PIO rxPio;
+    int rxSmIndx;
+    uint rxOffset;
     uint8_t charIndex;
+
+    PIO txPio;
+    int txSmIndx;
+    uint txOffset;
 
     irq_handler_t handler;
     QueueHandle_t xQueue;
     char buffer[OpenAce::NMEA_MAX_LENGTH];
 
+    bool enableRx();
+    void disableRx();
 public:
     PioSerial(const OpenAce::PinTypeMap &pins, uint32_t baudrate_) :
         rxPin(pins.at(OpenAce::PinType::RX)),
         txPin(pins.at(OpenAce::PinType::TX)),
         baudrate(baudrate_),
-        pio(nullptr),
-        smIndx(-1),
-        offset(-1),
+        rxPio(nullptr),
+        rxSmIndx(-1),
+        rxOffset(0),
         charIndex(0),
+        txPio(nullptr),
+        txSmIndx(-1),
+        txOffset(0),
         handler(nullptr),
         xQueue(nullptr)
     {
@@ -95,7 +104,6 @@ public:
     QueueHandle_t getHandle() const;
 
     void start() ;
-
     void stop() ;
 
 
@@ -106,6 +114,7 @@ public:
     */
     static void pio_irq_func(uint8_t irqHandlerIndex);
 
+    bool enableTx(uint32_t givenBaudRate);
     /**
      * Send that to the uart using blocking IO
      * At least one PIO needs to be available
@@ -115,12 +124,11 @@ public:
      *
      * @param data
      * @param length
-     * @param baudRate
      * @return true if the data was sent
     */
-    bool sendBlocking(uint32_t givenBaudRate, const uint8_t *data, uint16_t length);
+    void sendBlocking(const uint8_t *data, uint16_t length);
+    void disableTx();
 
-    bool sendBlocking(const uint8_t *data, uint16_t length);
     bool setBaudRate(uint32_t baudRate);
     /**
      * Validate if the uart is receiving any valid data at the given baudrate
