@@ -27,7 +27,11 @@ FetchContent_MakeAvailable(Catch2)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/core")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../ace")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../lib/mocks")
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../vendor/etl etlcpp)
+
+# Add vendor modules
+if(${CMAKE_SOURCE_DIR} STREQUAL ${PROJECT_SOURCE_DIR})
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../vendor/etl etlcpp)
+endif()
 
 # These examples use the standard separate compilation
 set( SOURCES_IDIOMATIC_EXAMPLES

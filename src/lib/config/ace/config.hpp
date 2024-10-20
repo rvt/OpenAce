@@ -15,7 +15,7 @@
 
 #include "ArduinoJson.hpp"
 
-#include "lwip/inet.h"
+// #include "lwip/inet.h"
 
 using namespace ArduinoJson;
 
@@ -202,5 +202,5 @@ public:
 
     virtual const OpenAce::Config::IpPort ipPortBypath(const etl::string_view pathToValue, const etl::string_view key) const override;
 
-    virtual bool isModuleEnabled(const etl::string_view moduleName) const;
+    virtual bool isModuleEnabled(const etl::string_view moduleName) const override;
 };
