@@ -1,4 +1,6 @@
 #include "main.h"
+#include "build_time.hpp"
+#include "default_config.hpp"
 
 /* System. */
 #include <stdio.h>
@@ -19,19 +21,8 @@
 #include "etl/exception.h"
 
 /* OpenAce. */
-// #include "ace/flashstore.hpp"
-// #include "ace/statusled.hpp"
 #include "ace/serialadsb.hpp"
-// #include "ace/prometheus.hpp"
-// #include "ace/trafficfilter.hpp"
-// #include "ace/dataport.hpp"
 #include "ace/dump1090client.hpp"
-// #include "ace/terminal.hpp"
-// #include "ace/gpstcpclient.hpp"
-// #include "ace/tcpclient.hpp"
-// #include "ace/airconnect.hpp"
-// #include "ace/kioskmode.hpp"
-// #include "ace/statcollector.hpp"
 
 #include "ace/messagerouter.hpp"
 #include "ace/constants.hpp"
@@ -57,9 +48,7 @@
 #include "ace/gdl90service.hpp"
 #include "ace/gdloverudp.hpp"
 
-#include "default_config.hpp"
-
-const char* buildTime = BUILD_TIME;
+const char* buildTime = BUILD_TIMESTAMP;
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */

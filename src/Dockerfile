@@ -32,9 +32,9 @@ ENV FREERTOS_KERNEL_PATH=/opt/FreeRTOS/FreeRTOS/Source
 # # Create entrypoint script that will be used at container start
 RUN echo '#!/bin/bash\n\
   echo "Using ninja"\n\
-  mkdir -p /opt/src/pico/dockerbuild\n\
+  mkdir -p /opt/src/pico/docker_build\n\
   cd /opt/src/pico\n\
-  cmake -B dockerbuild -G Ninja && ninja -C dockerbuild $1\n\
+  cmake -B docker_build -G Ninja && ninja -C docker_build $1\n\
   exit' > /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh

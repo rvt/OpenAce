@@ -3,6 +3,8 @@
 .pio
 wip/
 build/
+docker_build/
+release_build/
 private.data/
 .parcel-cache
 node_modules/

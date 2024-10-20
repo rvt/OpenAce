@@ -97,9 +97,9 @@ CountryRegulations::GetNextTxTimeResult CountryRegulations::getNextTxTime(uint16
         randomTime = get_rand_64() % (slot.txMaxTime - slot.txMinTime) + slot.txMinTime;
 
         // Don't generate a time close to a whole second to prevent
-        // a tx time with a rollover seconds. This prevents decryption issues for some protocols
+        // a tx time with a rollover seconds. This prevents decryption issues for some protocols mainly FLARM and ogn ogn 3.x.x
         auto endTime = currentMs + randomTime;
-        if ((endTime % 1000) > 950)
+        if ((endTime % 1000) > 925)
         {
             randomTime += 75;
         }

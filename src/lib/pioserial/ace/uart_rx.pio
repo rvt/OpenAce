@@ -155,8 +155,8 @@ static inline char uart_rx_program_test(PIO pio, uint sm, char rangeStart, char 
     }
 }
 
-// Read UART blocking with timeout
-static inline bool uart_rx_flush(PIO pio, uint sm, uint32_t timeout) {
+// Flush the RX buffer
+static inline bool uart_rx_flush(PIO pio, uint sm, uint32_t timeoutMs) {
     // 8-bit read from the uppermost byte of the FIFO, as data is left-justified
     io_rw_8 *rxfifo_shift = (io_rw_8*)&pio->rxf[sm] + 3;
     uint32_t start = time_us_32();
@@ -164,10 +164,10 @@ static inline bool uart_rx_flush(PIO pio, uint sm, uint32_t timeout) {
         if (!pio_sm_is_rx_fifo_empty(pio, sm)) {
             (char)*rxfifo_shift;
         }
-        if ((time_us_32() - start) > timeout*1000) {
+        if ((time_us_32() - start) > (timeoutMs*1000)) {
             return true;
         }
-        taskYIELD();
+        vTaskDelay(1);
     }
 }
 

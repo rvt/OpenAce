@@ -317,7 +317,7 @@ void Ogn1::ognReceiveTask(void *arg)
                 continue;
             }
 
-            printf("OGN: Address %06X\n", packet.Header.Address);
+            // printf("OGN: Address %06X\n", packet.Header.Address);
             ogn1->addReceiveStat(msg.frequency);
             ogn1->parseFrame(packet, msg.rssidBm);
         }

@@ -157,7 +157,7 @@ bool UbloxM8N::detectAndConfigureGPS()
     if (scanBaudRate != GPS_BAUDRATE)
     {
         statistics.status = "Found";
-        printf("GPS found at %ldBd setting to %ldBd, waiting for GPS to come back on... ", scanBaudRate, GPS_BAUDRATE);
+        // printf("GPS found at %ldBd setting to %ldBd, waiting for GPS to come back on... ", scanBaudRate, GPS_BAUDRATE);
         if (!pioSerial.enableTx(scanBaudRate)) 
         {
             puts("enableTx failed");
@@ -187,8 +187,9 @@ bool UbloxM8N::detectAndConfigureGPS()
         // Save to BBR so we don't have slow startup delays finding the uart
         // Temporary disabled to test finding of uBlox
         statistics.status = "BBR";
-        // pioSerial.sendBlocking(UbloxM8N_saveBBR, sizeof(UbloxM8N_saveBBR));
-        // pioSerial.rxFlush();
+        pioSerial.sendBlocking(UbloxM8N_saveBBR, sizeof(UbloxM8N_saveBBR));
+        vTaskDelay(50);
+        pioSerial.rxFlush();
     }
 
     // Configure GPS
@@ -201,6 +202,7 @@ bool UbloxM8N::detectAndConfigureGPS()
     {
         // printf("Send configuration %d\n", i);
         pioSerial.sendBlocking(&UbloxM8N_m8nConfig[i][1], UbloxM8N_m8nConfig[i][0]);
+        // TODO: Wait for 'ok' reply, this requires modification in pioserial
         vTaskDelay(250);
         pioSerial.rxFlush(100);
     }

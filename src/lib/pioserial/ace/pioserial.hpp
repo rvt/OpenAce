@@ -140,6 +140,9 @@ public:
     */
     uint32_t findBaudRate(uint32_t maxTimeOutMs=1000);
 
-    bool rxFlush(uint32_t timeOut=1000);
+    /**
+     * Flush the RX Buffers up to a timeout in ms
+     */
+    bool rxFlush(uint32_t timeOutMs=1000);
 
 };

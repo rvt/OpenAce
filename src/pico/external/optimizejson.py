@@ -20,6 +20,7 @@ def write_cpp_header(data, file_path):
     with open(file_path, 'w') as file:
 
         file.write("#pragma once\n\n")
+        file.write("#include <stdint.h>\n\n")        
         file.write("static constexpr uint8_t DEFAULT_OPENACE_CONFIG[] = {")
 
         json_string = json.dumps(data, separators=(',', ':'))

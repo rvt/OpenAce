@@ -48,7 +48,7 @@ class GpsStatus extends El {
       <div class="section">
         <table>
           <tbody>
-            ${this._row(html, "GPS Time", this.state.data?.gpstime)} ${this._row(html, "Sats", this.state.data?.satellitesTracked)}
+            ${this._row(html, "GPS Time", this.state.data?.gpstime)} ${this._row(html, "Tracked Satellites", this.state.data?.satellitesTracked)}
             ${this._row(html, "Longitude", this.state.data?.longitude)} ${this._row(html, "Latitude", this.state.data?.latitude)}
             ${this._row(html, "GPS Altitude", (this.state.data?.altitude * 3.28).toFixed(0), "ft")}
             ${this._row(html, "Groundspeed", (this.state.data?.groundspeed * 1.94).toFixed(0), "knt")}

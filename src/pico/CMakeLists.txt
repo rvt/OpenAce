@@ -9,11 +9,24 @@ execute_process(
 
 # All defines go in config.hpp that should not be configurable for the board
 # itself. Default configurations could go here if that makes sense
-string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M:%SZ" UTC)
-set(PROJECT_SOURCE_DIR_PATH "${PROJECT_SOURCE_DIR}")
-configure_file(config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp @ONLY)
-add_definitions(-include ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp)
-add_definitions(-DBUILD_TIME="${BUILD_TIME}")
+set(CONFIG_HEADER "${CMAKE_BINARY_DIR}/config.hpp")
+configure_file(config.hpp.in ${CONFIG_HEADER} @ONLY)
+add_definitions(-include ${CONFIG_HEADER})
+
+# Add buildtime timestamp
+# Move this to a dedicated 'status' module to reduce build times
+set(BUILD_TIME_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/build_time.hpp")
+string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%d %H:%M:%SZ" UTC)
+file(WRITE "${BUILD_TIME_HEADER}" 
+    "#pragma once\n"
+    "#define BUILD_TIMESTAMP \"${BUILD_TIMESTAMP}\"\n"
+)
+# Create a custom command and target to ensure the header is generated
+add_custom_command(
+  OUTPUT "${BUILD_TIME_HEADER}"
+  COMMAND ${CMAKE_COMMAND} -E touch "${BUILD_TIME_HEADER}"
+  DEPENDS "${BUILD_TIME_HEADER}"
+)
 
 set(PICO_BOARD pico_w)
 

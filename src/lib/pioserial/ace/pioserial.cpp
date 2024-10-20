@@ -141,23 +141,16 @@ void PioSerial::pio_irq_func(uint8_t irqHandlerIndex)
     while (!pio_sm_is_rx_fifo_empty(pioSerial.rxPio, pioSerial.rxSmIndx))
     {
         char c = uart_rx_program_getc(pioSerial.rxPio, pioSerial.rxSmIndx);
-        if (pioSerial.charIndex >= OpenAce::NMEA_MAX_LENGTH)
+        if (c == '$' || pioSerial.charIndex >= OpenAce::NMEA_MAX_LENGTH)
         {
-            // @todo I don't think we need this anymore
-            memset(pioSerial.buffer, 0, pioSerial.charIndex);
             pioSerial.charIndex = 0;
         }
         pioSerial.buffer[pioSerial.charIndex++] = c;
 
-        if (c == '\n' || c == '\r' )
+        if (pioSerial.charIndex > 8 && (c == '\n' || c == '\r'))
         {
-            if (pioSerial.buffer[0] == '$' && pioSerial.charIndex > 8)
-            {
-                pioSerial.buffer[pioSerial.charIndex] = '\0';
-                xQueueSendFromISR(pioSerial.xQueue, &pioSerial.buffer, &xHigherPriorityTaskWoken);
-            }
-            // @todo I don't think we need this anymore
-            memset(pioSerial.buffer, 0, pioSerial.charIndex);
+            pioSerial.buffer[pioSerial.charIndex] = '\0';
+            xQueueSendFromISR(pioSerial.xQueue, &pioSerial.buffer, &xHigherPriorityTaskWoken);
             pioSerial.charIndex = 0;
         }
     }
@@ -237,8 +230,8 @@ uint32_t PioSerial::findBaudRate(uint32_t maxTimeOutMs)
     return 0;
 }
 
-bool PioSerial::rxFlush(uint32_t timeOut)
+bool PioSerial::rxFlush(uint32_t timeOutMs)
 {
-    return uart_rx_flush(rxPio, rxSmIndx, timeOut);
+    return uart_rx_flush(rxPio, rxSmIndx, timeOutMs);
 }
 
