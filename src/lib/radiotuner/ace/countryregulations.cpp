@@ -84,37 +84,39 @@ uint8_t CountryRegulations::nextSlotIdx(CountryRegulations::Zone zone, uint8_t c
     return timings[currentIdx].nextSlotIdx;
 }
 
-CountryRegulations::GetNextTxTimeResult CountryRegulations::getNextTxTime(uint16_t currentMs, uint8_t currentIdx)
+CountryRegulations::GetNextTxTimeResult CountryRegulations::getNextTxTime(uint16_t msInSecond, uint8_t currentIdx)
 {
     constexpr uint8_t MAXFAILSAFE = 3; // maximum number of tries until give up trying to find a time
     const auto &slot = protocolTimeslotById(currentIdx);
 
-    uint8_t failSafe = 0; // Counter just in case that during zone hcnages no protocol can be found
+    // Counter just in case that during zone changes no protocol can be found
+    uint8_t failSafe = 0; 
     uint16_t randomTime;
     uint8_t idx;
     do
     {
-        randomTime = get_rand_64() % (slot.txMaxTime - slot.txMinTime) + slot.txMinTime;
+        randomTime = (get_rand_64() % slot.slotDuration) + slot.slotStartTime;
 
         // Don't generate a time close to a whole second to prevent
-        // a tx time with a rollover seconds. This prevents decryption issues for some protocols mainly FLARM and ogn ogn 3.x.x
-        auto endTime = currentMs + randomTime;
-        if ((endTime % 1000) > 925)
-        {
-            randomTime += 75;
+        // a tx time with a rollover seconds. This prevents decryption issues for some protocols mainly FLARM and ogn 3.x.x receiver
+        if (slot.source == OpenAce::DataSource::FLARM) {
+            if ((randomTime % 1000) > 975 && (randomTime % 1000) < 1000)
+            {
+                randomTime += 25;
+            }
         }
 
-        idx = findFittingTimeslot(endTime, currentIdx);
+        idx = findFittingTimeslot(randomTime, currentIdx);
     }
     while (idx == 0 && failSafe++ <= MAXFAILSAFE);
 
     // If fail safe, then return a default timeout that always matches
-    if (failSafe >= MAXFAILSAFE)
+    if (idx == NONE_DATASOURCE.idx)
     {
-        return GetNextTxTimeResult{slot.idx, CoreUtils::msDelayToReference(slot.slotStartTime + 100, currentMs + slot.txMinTime)};
+        return GetNextTxTimeResult{slot.idx, CoreUtils::msDelayToReference(slot.slotStartTime + 100, msInSecond)};
     }
 
-    return GetNextTxTimeResult{idx, randomTime};
+    return GetNextTxTimeResult{idx, CoreUtils::msDelayToReference(randomTime, msInSecond) };
 }
 
 uint8_t CountryRegulations::nextProtocolTimeslot(uint16_t currentMs, CountryRegulations::Zone zone, OpenAce::DataSource source)

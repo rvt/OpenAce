@@ -164,7 +164,7 @@ public:
         uint8_t idx;
         uint16_t duration;
     };
-    static GetNextTxTimeResult getNextTxTime(uint16_t currentMs, uint8_t currentIdx);
+    static GetNextTxTimeResult getNextTxTime(uint16_t msInSecond, uint8_t currentIdx);
 
     /**
      * Based on the current time in Ms, decide for the given zone and protocol what the next timeslot is going to be

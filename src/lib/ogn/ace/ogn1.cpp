@@ -247,14 +247,16 @@ void Ogn1::on_receive(const OpenAce::RadioTxPositionRequest &msg)
         packet.EncodeAltitude(ownshipPosition.altitudeWgs84);
         packet.EncodeDOP(gpsStats.pDop + 0.5f);
 
-        if (CoreUtils::msElapsed(lastBarometricPressure.msSinceBoot) > 4'000)
-        {
-            packet.clrBaro();
-        }
-        else
-        {
-            packet.EncodeStdAltitude(lastBarometricPressure.pressurehPa);
-        }
+        // TODO: Understand how baro Altitude really works in OGN
+        packet.clrBaro();
+        // if (CoreUtils::msElapsed(lastBarometricPressure.msSinceBoot) > 4'000)
+        // {
+        //     packet.clrBaro();
+        // }
+        // else
+        // {
+        //     packet.EncodeStdAltitude(lastBarometricPressure.pressurehPa);
+        // }
 
         packet.Position.FixQuality = gpsStats.fixQuality < 3 ? gpsStats.fixQuality : 0;
         packet.Position.FixMode = packet.Position.FixQuality > 0 ? gpsStats.fixType : 0;

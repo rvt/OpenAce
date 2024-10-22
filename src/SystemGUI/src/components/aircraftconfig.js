@@ -59,7 +59,7 @@ class AircraftConfig extends El {
         },
         {
           rule: "customRegexp",
-          value: /^[A-Z0-9\-]*$/,
+          value: /^[a-zA-Z0-9\-]*$/,
         },
         {
           rule: "minLength",
@@ -94,7 +94,7 @@ class AircraftConfig extends El {
     this.$refs.callSign.value = aircraft.callSign?.toUpperCase() ?? "";
     this.$refs[`category${aircraft.category?.toUpperCase()}`].selected = true;
     this.$refs[`transponderType${aircraft.addressType?.toUpperCase()}`].selected = true;
-    this.$refs.address.value = this._addressFormat(aircraft.address);
+    this.$refs.address.value = this._addressFormat(aircraft.address).toUpperCase();
     this.$refs.noTrack.checked = aircraft.noTrack;
     this.$refs.privacy.checked = aircraft.privacy;
     for (let i of this.protocolTypes) {

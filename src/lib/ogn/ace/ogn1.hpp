@@ -68,25 +68,25 @@ class Ogn1 : public BaseModule, public etl::message_router<Ogn1, OpenAce::RadioR
 
     TaskHandle_t taskHandle;
     QueueHandle_t frameConsumerQueue;
-    OpenAce::AircraftAddress ownshipAddress;
     OpenAce::OwnshipPositionInfo ownshipPosition;
-    OpenAce::Config::OpenAceConfiguration openAceConfiguration;
     OpenAce::BarometricPressure lastBarometricPressure;
-    LDPC_Decoder<OGN_PACKET_LENGTH*8, 48> decoder;
     OpenAce::GpsStatsMsg gpsStats;
+    OpenAce::Config::OpenAceConfiguration openAceConfiguration;
     uint16_t distanceIgnore;
+    LDPC_Decoder<OGN_PACKET_LENGTH*8, 48> decoder;
 public:
     static constexpr const etl::string_view NAME = "Ogn1";
     Ogn1(etl::imessage_bus& bus, const Configuration &config) :
         BaseModule(bus, NAME),
         taskHandle(nullptr),
         frameConsumerQueue(nullptr),
-        ownshipAddress(0x000000),
-        ownshipPosition()
+        ownshipPosition(),
+        lastBarometricPressure(),
+        gpsStats(),
+        openAceConfiguration(config.openAceConfig())
     {
         int32_t v = config.valueByPath(25000, "Ogn1", "distanceIgnore");
         distanceIgnore = std::max((int32_t)0, std::min(v, MAX_IGNORE_DISTANCE));
-        openAceConfiguration = config.openAceConfig();
     }
 
     virtual ~Ogn1() = default;

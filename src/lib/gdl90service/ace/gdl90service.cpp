@@ -135,8 +135,8 @@ void Gdl90Service::on_receive(const OpenAce::OwnshipPositionMsg &msg)
 
     gdl90.latlon_encode(latitude, pos.lat);
     gdl90.latlon_encode(longitude, pos.lon);
-    gdl90.altitude_encode(altitude, pos.altitudeWgs84 * M_TO_FT + 1000);
-    gdl90.horizontal_velocity_encode(horiz_velocity, pos.groundSpeed * MS_TO_KN + 100);
+    gdl90.altitude_encode(altitude, pos.altitudeWgs84 * M_TO_FT);
+    gdl90.horizontal_velocity_encode(horiz_velocity, pos.groundSpeed * MS_TO_KN );
     gdl90.vertical_velocity_encode(vert_velocity, pos.verticalSpeed * MS_TO_FTPMIN);
     gdl90.track_hdg_encode(track_hdg, pos.course);
 
@@ -165,7 +165,7 @@ void Gdl90Service::on_receive(const OpenAce::OwnshipPositionMsg &msg)
                 latitude,
                 longitude,
                 altitude,
-                GDL90::MISC_TT_HEADING_TRUE_MASK | GDL90::MISC_AIRBORNE_MASK, // (pos.groundSpeed > OpenAce::GROUNDSPEED_CONSIDERING_AIRBORN ? GDL90::MISC_AIRBORNE_MASK : 0),
+                GDL90::MISC_TT_HEADING_TRUE_MASK | (pos.groundSpeed > OpenAce::GROUNDSPEED_CONSIDERING_AIRBORN ? GDL90::MISC_AIRBORNE_MASK : 0),
                 GDL90::NIC::HPL_LT_25_VPL_LT_37_5,
                 GDL90::NACP::HFOM_LT_30_VFOM_LT_45, /* Integrity | Accuracy We do not really have this information from the GPS */
                 horiz_velocity,

@@ -107,6 +107,8 @@ public:
      * When reference time is 700, the result is 100
      * When reference time is 200, the result is 600 (Wraps over a whole second)
      * Currently will only allow to delay for 1000ms max
+     * ms needs to be 0..1000
+     * refMsInSecond 0..n
     */
     static inline uint16_t msDelayToReference(uint16_t refMsInSecond, uint16_t ms=msInSecond())
     {

@@ -122,8 +122,8 @@ void RadioTunerTx::radioTxTask(void *arg)
                         protocolTimeSlot.frequency.powerdBm},
                     taskCtx->radioNo});
 
-                auto currentMs = CoreUtils::msInSecond();
-                auto nextTxTime = CountryRegulations::getNextTxTime(currentMs, taskCtx->protocolTimingIdx);
+                auto msInSecond = CoreUtils::msInSecond();
+                auto nextTxTime = CountryRegulations::getNextTxTime(msInSecond, taskCtx->protocolTimingIdx);
 
                 taskCtx->protocolTimingIdx = nextTxTime.idx;
                 // printf("idx:%d expected: %d\n", nextTxTime.idx, (nextTxTime.duration + currentMs) % 1000);
