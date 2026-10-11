@@ -10,7 +10,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "timers.h"
 
 /* PICO. */
 #include "pico/binary_info.h"
@@ -36,7 +35,6 @@
 class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFrameMsg, GATAS::ConfigUpdatedMsg, GATAS::GpsStatsMsg, GATAS::RadioControlMsg>
 {
     static constexpr uint8_t MANCHESTER = 2;               // Used to just clarify why we sometime multiply by 2
-    static constexpr uint32_t TX_TIMEOUT_MS = 55;
 #if GATAS_DEBUG == 1
     static constexpr bool LOW_POWER_MODE = true;
 #else
@@ -52,11 +50,9 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFr
 
     enum TaskState : uint8_t
     {
-        DIO1_TX_DONE = 1,
-        DIO1_RX_DONE = 2,
+        DIO1_EVENT = 1,
         HANDLETX = 4,
         HANDLE_RX_CONFIG = 8,
-        TX_TIMEOUT = 16,
     };
 
     struct TxPacket
@@ -76,9 +72,12 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFr
         uint32_t txConfigureStarted = 0;
         uint32_t txConfigureCompleted = 0;
         uint32_t txSendPacketCompleted = 0;
-        uint32_t txTimerStarted = 0;
-        uint32_t txTimerCallbacks = 0;
-        uint32_t txDoneTimeoutCombined = 0;
+        uint32_t txTimeout = 0;
+        uint32_t rxTimeout = 0;
+        uint32_t unexpectedTimeout = 0;
+        uint32_t txRecovery = 0;
+        uint32_t halBusyTimeout = 0;
+        uint32_t halSpiErrors = 0;
     } statistics;
 
     // ************************************************************************************
@@ -172,7 +171,6 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFr
     bool hasGpsFix = false;
     SpiModule *spiHall = nullptr;
     TaskHandle_t taskHandle = nullptr;
-    TimerHandle_t txTimerHandle = nullptr;
     RxDataFrameQueue *rxDataFrameQueue = nullptr;
     // Keep track of the last error when there was an error, for monitoring only
     sx126x_errors_mask_t lastDeviceError=0;
@@ -184,6 +182,15 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFr
     // Used when new radioPatemers have arrived during RX requests
     GATAS::RadioParameters newRxRadioParameters{&PROTOCOL_NONE, &GATAS::RadioParameters::DEFAULT, 868'000'000, 0};
     GATAS::RadioParameters lastRadioParameters{&PROTOCOL_NONE, &GATAS::RadioParameters::DEFAULT, 868'000'000, 0};
+
+    enum class RadioDirection : uint8_t { RX, TX };
+
+    void configureSx1262(const GATAS::RadioParameters &parameters, RadioDirection direction, uint8_t payloadLength);
+    void configureProtocol(const GATAS::RadioParameters &parameters);
+    void configureGfskModulation(const GATAS::RadioParameters &parameters);
+    void configureGfskPacket(const GATAS::RadioParameters &parameters, RadioDirection direction, uint8_t payloadLength);
+    void configureLoraModulation(const GATAS::RadioParameters &parameters, RadioDirection direction);
+    void configureLoraPacket(const GATAS::RadioParameters &parameters, RadioDirection direction, uint8_t payloadLength);
 
 public:
     static constexpr etl::array<etl::string_view, 4> NAMES{"Sx1262_0", "Sx1262_1", "Sx1262_2", "Sx1262_3"};
@@ -258,22 +265,28 @@ public:
     void receiveLORAPacket();
     void sendGFSKPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length);
     void sendLORAPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length);
-    void configureSx1262(const GATAS::RadioParameters &newParameters, uint8_t txPayloadLength);
     sx126x_irq_mask_t getIrqStatus();
     bool isTxDone();
 
     void listen();
-    void standBy(sx126x_standby_cfg_t mode);
+    sx126x_status_t standBy(sx126x_standby_cfg_t mode);
 
     static void sx1262Trampoline(void *arg);
-    static void txTimerCallback(TimerHandle_t timer);
     void sx1262Task(void *arg);
+    void recordHalBusyTimeout();
+    void recordHalSpiError();
+
+    // One snapshot around a command sequence replaces per-command checks.
+    uint32_t halErrorCount() const
+    {
+        return statistics.halBusyTimeout + statistics.halSpiErrors;
+    }
 
     uint8_t receivedPacketLength() const;
 
-    void sendPacket(const TxPacket &txpacket);
+    sx126x_status_t sendPacket(const TxPacket &txpacket);
 
-    void waitBusy(uint16_t minimumDelay = 0) const;
+    bool waitBusy(uint16_t minimumDelay = 0) const;
 
     /**
      * When module is disabled, this static function can be called to ensure the CS pin is not floating and the device is in sleep mode.
