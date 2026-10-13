@@ -183,7 +183,7 @@ void Sx1262::radioInit()
     sx126x_clear_irq_status(this, SX126X_IRQ_ALL);
 
     // Must be called before any calibration
-    auto rtcSteps = sx126x_convert_timeout_in_ms_to_rtc_step(2);
+    auto rtcSteps = sx126x_convert_timeout_in_ms_to_rtc_step(5);
     sx126x_set_dio3_as_tcxo_ctrl(this, SX126X_TCXO_CTRL_1_6V, rtcSteps);
 
     sx126x_set_dio2_as_rf_sw_ctrl(this, true);
@@ -194,12 +194,11 @@ void Sx1262::radioInit()
     // 13.1.12 Calibrate Function and regulator must happen in SX126X_STANDBY_CFG_RC
     sx126x_set_standby(this, SX126X_STANDBY_CFG_RC);
     sx126x_set_reg_mode(this, SX126X_REG_MODE_DCDC);
-    checkAndClearDeviceErrors();
-    waitBusy(10);
     sx126x_cal(this, SX126X_CAL_ALL);
-    waitBusy(10);
+    waitBusy(25);
+    checkAndClearDeviceErrors();
     sx126x_cal_img_in_mhz(this, 868 - 2, 868 + 2); // 13.1.13 CalibrateImage
-    waitBusy(10);
+    waitBusy(100);
     // Clear out any devices errors that will appear before we did the first calibration
     statistics.deviceErrors = 0;
     lastDeviceError = 0;
