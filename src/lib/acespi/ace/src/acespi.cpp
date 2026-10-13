@@ -16,7 +16,7 @@ GATAS::PostConstruct AceSpi::postConstruct()
     gpio_put(rst, 1);
 
     // Set default SPI bus frequency
-    spi_init(spi?spi1:spi0, GATAS_SPI_DEFAULT_BUS_FREQUENCY * 1000 * 1000);
+    spi_init(spi ? spi1 : spi0, GATAS_SPI_DEFAULT_BUS_FREQUENCY * 1000 * 1000);
     gpio_set_function(miso, GPIO_FUNC_SPI);
     gpio_set_function(clk, GPIO_FUNC_SPI);
     gpio_set_function(mosi, GPIO_FUNC_SPI);
@@ -39,9 +39,9 @@ void AceSpi::read_registers(uint8_t cs, uint8_t reg, uint8_t *buf, uint16_t len,
 {
     reg |= READ_BIT;
     cs_select(cs);
-    spi_write_blocking(spi?spi1:spi0, &reg, 1);
+    spi_write_blocking(spi ? spi1 : spi0, &reg, 1);
     vTaskDelay(TASK_DELAY_MS(delayMs));
-    spi_read_blocking(spi?spi1:spi0, 0, buf, len);
+    spi_read_blocking(spi ? spi1 : spi0, 0, buf, len);
     cs_deselect(cs);
     vTaskDelay(TASK_DELAY_MS(delayMs));
 }
@@ -50,12 +50,12 @@ void AceSpi::read_registers_select(uint8_t cs, uint8_t reg) const
 {
     reg |= READ_BIT;
     cs_select(cs);
-    spi_write_blocking(spi?spi1:spi0, &reg, 1);
+    spi_write_blocking(spi ? spi1 : spi0, &reg, 1);
 }
 
 void AceSpi::read_registers_read(uint8_t cs, uint8_t *buf, uint16_t len) const
 {
-    spi_read_blocking(spi?spi1:spi0, 0, buf, len);
+    spi_read_blocking(spi ? spi1 : spi0, 0, buf, len);
     cs_deselect(cs);
 }
 
@@ -72,7 +72,7 @@ void AceSpi::cs_deselect(uint8_t cs) const
 void AceSpi::write_array(uint8_t cs, uint8_t *data, uint8_t length, uint8_t delayMs) const
 {
     cs_select(cs);
-    spi_write_blocking(spi?spi1:spi0, data, length);
+    spi_write_blocking(spi ? spi1 : spi0, data, length);
     cs_deselect(cs);
     vTaskDelay(TASK_DELAY_MS(delayMs));
 }
@@ -87,14 +87,16 @@ void AceSpi::write_byte(uint8_t cs, uint8_t data, uint8_t delayMs) const
  */
 void AceSpi::resetDevices() const
 {
-    if (rst != UINT8_MAX) {
+    if (rst != UINT8_MAX)
+    {
         gpio_put(rst, 0);
         vTaskDelay(TASK_DELAY_MS(100));
         gpio_put(rst, 1);
     }
 }
 
-SpiGuard AceSpi::getLock(bool &locked) {
+SpiGuard AceSpi::getLock(bool &locked)
+{
     return SpiGuard(mutex, locked);
 };
 

@@ -16,13 +16,13 @@
 
 /**
  * Wait for the BUSY pin to reach the requested state, yielding at most once
- * per millisecond after the initial spin period.
+ * per yieldIntervalUs after the initial spin period.
  * Returns 0 on success and 1 on timeout.
  */
 uint8_t sx126x_buzy_wait(uint8_t busyPin, uint8_t code = 0, bool waitFor = false)
 {
-    constexpr uint32_t timeoutUs = 1500'000;
-    constexpr uint32_t yieldIntervalUs = 1'000;
+    constexpr uint32_t timeoutUs = 25'000;
+    constexpr uint32_t yieldIntervalUs = 3'000;
     (void)code;
     const uint32_t start = CoreUtils::timeUs32Raw();
     uint32_t nextYieldAt = start + yieldIntervalUs;

@@ -51,8 +51,8 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFr
     enum TaskState : uint8_t
     {
         DIO1_EVENT = 1,
-        HANDLETX = 4,
-        HANDLE_RX_CONFIG = 8,
+        TX_PENDING = 4,
+        RX_CONFIG_PENDING = 8,
     };
 
     struct TxPacket
@@ -79,6 +79,8 @@ class Sx1262 : public Radio, public etl::message_router<Sx1262, GATAS::RadioTxFr
         uint32_t halBusyTimeout = 0;
         uint32_t halSpiErrors = 0;
     } statistics;
+
+    bool halError = false;
 
     // ************************************************************************************
     // 13.1.14.1 SetPaConfig
@@ -276,10 +278,15 @@ public:
     void recordHalBusyTimeout();
     void recordHalSpiError();
 
-    // One snapshot around a command sequence replaces per-command checks.
-    uint32_t halErrorCount() const
+    // Clear only at the start of an operation, never inside its nested helpers.
+    void clearHalError()
     {
-        return statistics.halBusyTimeout + statistics.halSpiErrors;
+        halError = false;
+    }
+
+    bool hasHalError() const
+    {
+        return halError;
     }
 
     uint8_t receivedPacketLength() const;

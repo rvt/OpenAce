@@ -140,7 +140,7 @@ void Sx1262::on_receive(const GATAS::RadioTxFrameMsg &msg)
             }
         }
 
-        xTaskNotify(taskHandle, TaskState::HANDLETX, eSetBits);
+        xTaskNotify(taskHandle, TaskState::TX_PENDING, eSetBits);
     }
 }
 
@@ -164,7 +164,7 @@ void Sx1262::on_receive(const GATAS::RadioControlMsg &msg)
     if (msg.radioNo == radioNo)
     {
         newRxRadioParameters = SpinlockGuard::copyWithLock(CoreUtils::sharedSpinLock(), msg.radioParameters);
-        xTaskNotify(taskHandle, TaskState::HANDLE_RX_CONFIG, eSetBits);
+        xTaskNotify(taskHandle, TaskState::RX_CONFIG_PENDING, eSetBits);
     }
 }
 
@@ -183,7 +183,7 @@ void Sx1262::radioInit()
     sx126x_clear_irq_status(this, SX126X_IRQ_ALL);
 
     // Must be called before any calibration
-    auto rtcSteps = sx126x_convert_timeout_in_ms_to_rtc_step(5);
+    auto rtcSteps = sx126x_convert_timeout_in_ms_to_rtc_step(2);
     sx126x_set_dio3_as_tcxo_ctrl(this, SX126X_TCXO_CTRL_1_6V, rtcSteps);
 
     sx126x_set_dio2_as_rf_sw_ctrl(this, true);
@@ -194,11 +194,15 @@ void Sx1262::radioInit()
     // 13.1.12 Calibrate Function and regulator must happen in SX126X_STANDBY_CFG_RC
     sx126x_set_standby(this, SX126X_STANDBY_CFG_RC);
     sx126x_set_reg_mode(this, SX126X_REG_MODE_DCDC);
-    sx126x_cal(this, SX126X_CAL_ALL);
-    waitBusy(25);
     checkAndClearDeviceErrors();
+    waitBusy(10);
+    sx126x_cal(this, SX126X_CAL_ALL);
+    waitBusy(10);
     sx126x_cal_img_in_mhz(this, 868 - 2, 868 + 2); // 13.1.13 CalibrateImage
-    waitBusy(100);
+    waitBusy(10);
+    // Clear out any devices errors that will appear before we did the first calibration
+    statistics.deviceErrors = 0;
+    lastDeviceError = 0;
     checkAndClearDeviceErrors();
 
     // Calibration done, use stanby
@@ -233,11 +237,19 @@ void Sx1262::configureSx1262(const GATAS::RadioParameters &newParameters,
 {
     GATAS_ASSERT(newParameters.config != nullptr && newParameters.frequency != nullptr, "Invalid radio parameters");
     GATAS_ASSERT(newParameters.config->dataSource() != GATAS::DataSource::NONE, "Cannot configure radio for NONE");
+    GATAS_MEASURE("configureSx1262", 600);
 
-    // Leave the active mode before configuring; modem changes require STDBY_RC.
-    standBy(newParameters.frequency->mode != currentConfiguredModulation
-                ? SX126X_STANDBY_CFG_RC : SX126X_STANDBY_CFG_XOSC);
-    checkAndClearDeviceErrors();
+    // Completion/timeout leaves the radio in standby; the task stops active RX.
+    // Only a modem change requires selecting RC standby here.
+    if (newParameters.frequency->mode != currentConfiguredModulation)
+    {
+        standBy(SX126X_STANDBY_CFG_RC);
+    }
+
+    {
+        GATAS_MEASURE("checkAndClearDeviceErrors", 600 /* 200 */);
+        checkAndClearDeviceErrors();
+    }
 
     if (newParameters.config->pcId != currentConfiguredPcId)
     {
@@ -249,6 +261,7 @@ void Sx1262::configureSx1262(const GATAS::RadioParameters &newParameters,
     sx126x_set_buffer_base_address(this, 0x00, groundStation ? GROUNDSTATION_RX_BASE : DEFAULT_RX_BASE);
     if (newParameters.frequency->mode == GATAS::Modulation::GFSK)
     {
+        configureGfskModulation(newParameters);
         configureGfskPacket(newParameters, direction, payloadLength);
     }
     else if (newParameters.frequency->mode == GATAS::Modulation::LORA)
@@ -258,7 +271,11 @@ void Sx1262::configureSx1262(const GATAS::RadioParameters &newParameters,
     }
 
     sx126x_set_rf_freq(this, newParameters.hopFrequency + offsetHz);
-    checkAndClearDeviceErrors();
+    {
+        GATAS_MEASURE("checkAndClearDeviceErrors", 600 /* 200 */);
+        checkAndClearDeviceErrors();
+    }
+
     currentConfiguredPcId = newParameters.config->pcId;
     currentConfiguredModulation = newParameters.frequency->mode;
     lastRadioParameters = newParameters;
@@ -266,7 +283,7 @@ void Sx1262::configureSx1262(const GATAS::RadioParameters &newParameters,
 
 void Sx1262::configureProtocol(const GATAS::RadioParameters &newParameters)
 {
-    GATAS_MEASURE("configureSx1262", 1600 /* 500 */);
+    GATAS_MEASURE("configureProtocol", 1600 /* 500 */);
     // Recovery also invalidates this cache if the HAL records a setup error.
     currentConfiguredPcId = PROTOCOL_NONE.pcId;
     currentConfiguredModulation = GATAS::Modulation::NONE;
@@ -275,17 +292,22 @@ void Sx1262::configureProtocol(const GATAS::RadioParameters &newParameters)
     if (newParameters.frequency->mode == GATAS::Modulation::GFSK)
     {
         sx126x_set_pkt_type(this, SX126X_PKT_TYPE_GFSK);
-        configureGfskModulation(newParameters);
     }
     else if (newParameters.frequency->mode == GATAS::Modulation::LORA)
     {
         sx126x_set_pkt_type(this, SX126X_PKT_TYPE_LORA);
-        sx126x_set_lora_sync_word(this, newParameters.config->syncWord.data()[0]);
     }
 }
 
 void Sx1262::configureGfskModulation(const GATAS::RadioParameters &newParameters)
 {
+    // Unlike LoRa's per-packet coding rate, GFSK modulation is fixed by pcId.
+    // The coordinator commits the new pcId only after all configuration calls.
+    if (newParameters.config->pcId == currentConfiguredPcId)
+    {
+        return;
+    }
+
     auto mod = DEFAULT_MOD_PARAMS_GFSK;
     if (newParameters.frequency->channelBandwidth == 234300)
     {
@@ -324,7 +346,7 @@ void Sx1262::configureGfskModulation(const GATAS::RadioParameters &newParameters
 }
 
 void Sx1262::configureGfskPacket(const GATAS::RadioParameters &newParameters,
-                                RadioDirection direction, uint8_t payloadLength)
+                                 RadioDirection direction, uint8_t payloadLength)
 {
     // preamble_len_in_bits -> transmitted preamble length: number of bits sent as preamble coded as 0x55.
     // preamble_detector -> the packet controller will only become active if a certain number of preamble bits have been successfully received by the rad
@@ -410,12 +432,18 @@ void Sx1262::configureLoraModulation(const GATAS::RadioParameters &newParameters
 }
 
 void Sx1262::configureLoraPacket(const GATAS::RadioParameters &newParameters,
-                                RadioDirection direction, uint8_t payloadLength)
+                                 RadioDirection direction, uint8_t payloadLength)
 {
     auto pkg = DEFAULT_PKG_PARAMS_LORA;
     pkg.pld_len_in_bytes = direction == RadioDirection::TX ? payloadLength : newParameters.config->packetLength;
     pkg.preamble_len_in_symb = newParameters.config->txPreambleLength;
     sx126x_set_lora_pkt_params(this, &pkg);
+    // Keep sync-word setup with packet settings for both modems. LoRa's sync
+    // word is direction-independent, so it only needs writing on a pcId change.
+    if (newParameters.config->pcId != currentConfiguredPcId)
+    {
+        sx126x_set_lora_sync_word(this, newParameters.config->syncWord.data()[0]);
+    }
 }
 
 void Sx1262::listen()
@@ -467,8 +495,12 @@ void Sx1262::sendLORAPacket(const GATAS::RadioParameters &parameters, const uint
 void Sx1262::receiveGFSKPacket()
 {
     // 13.5.3 GetPacketStatus
-    sx126x_pkt_status_gfsk_t pkt_status;
+    sx126x_pkt_status_gfsk_t pkt_status{};
     sx126x_get_gfsk_pkt_status(this, &pkt_status);
+    if (hasHalError())
+    {
+        return;
+    }
     if (pkt_status.rx_status.pkt_received && pkt_status.rx_status.abort_error == 0)
     {
         statistics.receivedPackets += 1;
@@ -495,7 +527,10 @@ void Sx1262::receiveGFSKPacket()
                 };
 
                 sx126x_read_buffer(this, groundStation ? GROUNDSTATION_RX_BASE : DEFAULT_RX_BASE, rxFrame.frame.get(), receivedFrameLength);
-                rxDataFrameQueue->push(etl::move(rxFrame));
+                if (!hasHalError())
+                {
+                    rxDataFrameQueue->push(etl::move(rxFrame));
+                }
             }
         }
         else
@@ -516,12 +551,20 @@ void Sx1262::receiveGFSKPacket()
 void Sx1262::receiveLORAPacket()
 {
     // 13.5.3 GetPacketStatus
-    sx126x_chip_status_t chip_status;
+    sx126x_chip_status_t chip_status{};
     sx126x_get_status(this, &chip_status);
+    if (hasHalError())
+    {
+        return;
+    }
     if (chip_status.cmd_status == SX126X_CMD_STATUS_DATA_AVAILABLE)
     {
-        sx126x_pkt_status_lora_t pkt_status;
+        sx126x_pkt_status_lora_t pkt_status{};
         sx126x_get_lora_pkt_status(this, &pkt_status);
+        if (hasHalError())
+        {
+            return;
+        }
 
         statistics.receivedPackets += 1;
         uint8_t receivedFrameLength = receivedPacketLength();
@@ -540,7 +583,10 @@ void Sx1262::receiveLORAPacket()
                 };
 
                 sx126x_read_buffer(this, groundStation ? GROUNDSTATION_RX_BASE : DEFAULT_RX_BASE, rxFrame.frame.get(), receivedFrameLength);
-                rxDataFrameQueue->push(etl::move(rxFrame));
+                if (!hasHalError())
+                {
+                    rxDataFrameQueue->push(etl::move(rxFrame));
+                }
             }
         }
         else
@@ -557,7 +603,7 @@ void Sx1262::receiveLORAPacket()
 
 uint8_t Sx1262::receivedPacketLength() const
 {
-    sx126x_rx_buffer_status_t rx_buffer_status;
+    sx126x_rx_buffer_status_t rx_buffer_status{0, 0};
     sx126x_get_rx_buffer_status(this, &rx_buffer_status);
     return rx_buffer_status.pld_len_in_bytes;
 }
@@ -568,9 +614,9 @@ bool Sx1262::waitBusy(uint16_t minimumDelay) const
     constexpr uint16_t checkInterval = 100; // loop cycles per check
 
     uint8_t countdown = checkInterval;
+    vTaskDelay(TASK_DELAY_MS(5));
     while (gpio_get(busyPin))
     {
-        vTaskDelay(TASK_DELAY_MS(2));
         if (--countdown == 0)
         {
             statistics.buzyWaitsTimeout += 1;
@@ -585,16 +631,18 @@ bool Sx1262::waitBusy(uint16_t minimumDelay) const
 void Sx1262::recordHalBusyTimeout()
 {
     statistics.halBusyTimeout += 1;
+    halError = true;
 }
 
 void Sx1262::recordHalSpiError()
 {
     statistics.halSpiErrors += 1;
+    halError = true;
 }
 
 sx126x_status_t Sx1262::standBy(sx126x_standby_cfg_t mode)
 {
-    GATAS_MEASURE("standBy", 2000 /* 150 */);
+    GATAS_MEASURE("standBy", 150);
 
     // .715
     return sx126x_set_standby(this, mode);
@@ -602,7 +650,6 @@ sx126x_status_t Sx1262::standBy(sx126x_standby_cfg_t mode)
 
 void Sx1262::checkAndClearDeviceErrors()
 {
-    GATAS_MEASURE("checkAndClearDeviceErrors", 600 /* 200 */);
     sx126x_status_t status = sx126x_get_device_errors(this, &currentDeviceError);
     if (status == SX126X_STATUS_OK && currentDeviceError != 0)
     {
@@ -679,7 +726,12 @@ void Sx1262::sx1262Task(void *arg)
 {
     (void)arg;
     constexpr uint32_t txDeadlineMs = 100;
-    enum class Operation : uint8_t { IDLE, RX, TX };
+    enum class Operation : uint8_t
+    {
+        IDLE,
+        RX,
+        TX
+    };
     Operation operation = Operation::IDLE;
     bool doListen = false;
     bool recoveryPending = false;
@@ -741,7 +793,6 @@ void Sx1262::sx1262Task(void *arg)
         }
         if (rxPacketPending)
         {
-            const auto errorsBefore = halErrorCount();
             if (lastRadioParameters.frequency->mode == GATAS::Modulation::GFSK)
             {
                 receiveGFSKPacket();
@@ -751,7 +802,7 @@ void Sx1262::sx1262Task(void *arg)
                 receiveLORAPacket();
             }
             rxPacketPending = false;
-            return halErrorCount() == errorsBefore;
+            return !hasHalError();
         }
         return true;
     };
@@ -759,23 +810,28 @@ void Sx1262::sx1262Task(void *arg)
     const auto startListening = [&]()
     {
         const auto &parameters = rxRadioParameters.config->dataSource() == GATAS::DataSource::NONE
-                                     ? lastRadioParameters : rxRadioParameters;
+                                     ? lastRadioParameters
+                                     : rxRadioParameters;
         if (parameters.config->dataSource() == GATAS::DataSource::NONE)
         {
             operation = Operation::IDLE;
             doListen = false;
             return true;
         }
-        const auto errorsBefore = halErrorCount();
         configureSx1262(parameters, RadioDirection::RX, 0);
+        if (hasHalError())
+        {
+            return false;
+        }
         listen();
         operation = Operation::RX;
-        doListen = halErrorCount() != errorsBefore;
+        doListen = hasHalError();
         return !doListen;
     };
 
     const auto recover = [&]()
     {
+        clearHalError();
         recoveryPending = true;
         // NRESET is shared. Recover this device using standby, never radioInit.
         // Drain final IRQs before reconfiguration can clear them.
@@ -792,7 +848,7 @@ void Sx1262::sx1262Task(void *arg)
         {
             // TX request bits may have coalesced before recovery. Schedule the
             // remaining real work; this is not a periodic retry or RX poll.
-            xTaskNotify(taskHandle, TaskState::HANDLETX, eSetBits);
+            xTaskNotify(taskHandle, TaskState::TX_PENDING, eSetBits);
         }
         // One bounded recovery attempt per wake. Persistent HAL failures remain
         // counted and are retried on the next notification, without polling.
@@ -804,12 +860,11 @@ void Sx1262::sx1262Task(void *arg)
         if (operation == Operation::TX && !recoveryPending)
         {
             const uint32_t elapsed = CoreUtils::timeMs32() - txStartedAtMs;
-            waitTicks = elapsed >= txDeadlineMs ? 0 :
-                etl::max<TickType_t>(1, pdMS_TO_TICKS(txDeadlineMs - elapsed));
+            waitTicks = elapsed >= txDeadlineMs ? 0 : etl::max<TickType_t>(1, pdMS_TO_TICKS(txDeadlineMs - elapsed));
         }
         uint32_t notifyValue = 0;
         xTaskNotifyWait(pdFALSE, ULONG_MAX, &notifyValue, waitTicks);
-        if (notifyValue & TaskState::HANDLE_RX_CONFIG)
+        if (notifyValue & TaskState::RX_CONFIG_PENDING)
         {
             rxRadioParameters = SpinlockGuard::copyWithLock(CoreUtils::sharedSpinLock(), newRxRadioParameters);
             doListen = true;
@@ -824,9 +879,11 @@ void Sx1262::sx1262Task(void *arg)
                 continue;
             }
 
-            // Stop RX before draining IRQs when deliberately changing its settings.
+            clearHalError();
+            // Stop RX before draining IRQs, keeping the oscillator running.
+            // configureSx1262 selects RC standby if the modem must change.
             const bool stoppingRx = operation == Operation::RX && (doListen || !txQueue.empty());
-            if (stoppingRx && standBy(SX126X_STANDBY_CFG_RC) != SX126X_STATUS_OK)
+            if (stoppingRx && standBy(SX126X_STANDBY_CFG_XOSC) != SX126X_STATUS_OK)
             {
                 recover();
                 continue;
@@ -867,15 +924,19 @@ void Sx1262::sx1262Task(void *arg)
 
             if (TxPacket txPacket; txQueue.pop(txPacket))
             {
-                const auto errorsBefore = halErrorCount();
                 statistics.txConfigureStarted += 1;
                 configureSx1262(txPacket.radioParameters, RadioDirection::TX, txPacket.length);
+                if (hasHalError())
+                {
+                    recover();
+                    continue;
+                }
                 statistics.txConfigureCompleted += 1;
                 const auto status = sendPacket(txPacket);
                 statistics.txSendPacketCompleted += 1;
                 operation = status == SX126X_STATUS_OK ? Operation::TX : Operation::IDLE;
                 txStartedAtMs = CoreUtils::timeMs32();
-                if (status != SX126X_STATUS_OK || halErrorCount() != errorsBefore)
+                if (status != SX126X_STATUS_OK || hasHalError())
                 {
                     recover();
                 }
