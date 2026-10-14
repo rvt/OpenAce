@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]
 
+## [v3.5.0] - 2026-10-14
+
+### Added
+
+-
+
+### Changed
+
+-
+
+### Deprecated
+
+-
+
+### Removed
+
+-
+
+### Fixed
+
+- 
+
+### Security
+
+-
+
+## [v3.5.0] - 2026-10-14
+
 ### Added
 
 - Added regression coverage for aircraft-tracker expiry, prediction, capacity cleanup,
@@ -47,9 +75,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the full-width receive timestamp.
 - Fixed GPS RMC/local-time diagnostics so millisecond-level second-boundary and normal
   sentence transport delays do not produce false warnings.
+- Imporved sx1262 robustness while changing radio modulations and syncwords  
 
 ### Security
 
+-
 
 ## [v3.4.0] - 2026-09-06
 
