@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]
 
+## [v3.5.0] - 2026-10-14
+
 ### Added
 
 -
@@ -25,10 +27,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--
+- 
 
 ### Security
 
+-
+
+## [v3.5.0] - 2026-10-14
+
+### Added
+
+- Added regression coverage for aircraft-tracker expiry, prediction, capacity cleanup,
+  radio-source priority, nearest-aircraft selection, and GDL90 encoding/decoding.
+- Added GDL90 packing-failure statistics to the service diagnostics.
+- Added version-negotiated aircraft position V3 messages with optional barometric altitude.
+
+### Changed
+
+- Aircraft tracking now filters expired measurements before scheduled output and ADS-L
+  uplink selection, while leaving storage cleanup to the existing maintenance paths.
+- Full tracker storage is reclaimed by removing the farthest aircraft one at a time,
+  preserving clustered traffic and recalculating the admission radius during cleanup.
+- Accepted aircraft updates no longer reset their existing output deadline, preventing
+  high-rate input from starving other aircraft.
+- Fresh radio positions retain priority over ADS-B and MLAT updates until the radio
+  priority timeout expires.
+- GDL90 ownship and traffic altitude handling now follows the configured altitude datum,
+  target traffic prefers received barometric altitude with an MSL fallback, and ForeFlight
+  identification advertises the matching datum.
+
+### Deprecated
+
+-
+
+### Removed
+
+-
+
+### Fixed
+
+- Fixed tracker output and uplink selection so stale aircraft cannot consume output slots
+  or displace valid nearer traffic.
+- Fixed GDL90 heartbeat, initialization, uplink, and related field byte ordering to match
+  the protocol, and corrected escaping, framing, CRC, capacity, and message validation.
+- Fixed GDL90 traffic address type and NACp encoding used by the service.
+- Fixed StaticGPS NTP synchronization after the 32-bit monotonic timer wraps by retaining
+  the full-width receive timestamp.
+- Fixed GPS RMC/local-time diagnostics so millisecond-level second-boundary and normal
+  sentence transport delays do not produce false warnings.
+- Imporved sx1262 robustness while changing radio modulations and syncwords  
+
+### Security
+
+-
 
 ## [v3.4.0] - 2026-09-06
 

@@ -15,19 +15,19 @@
 #include "ace/coreutils.hpp"
 
 /**
- * Wait for BUZY pin to go low or timeout.
- * When BUZY is low, the SX1262 is ready for new commands
- * returns 0 for sucess, 1 for timeout
- * This currently uses a spinlock with a timeoiut function
+ * Wait for the BUSY pin to reach the requested state, yielding at most once
+ * per yieldIntervalUs after the initial spin period.
+ * Returns 0 on success and 1 on timeout.
  */
-uint8_t sx126x_buzy_wait(uint8_t busyPin)
+uint8_t sx126x_buzy_wait(uint8_t busyPin, uint8_t code = 0, bool waitFor = false)
 {
-    constexpr uint32_t timeoutUs = 50'000;
-    constexpr uint32_t activeSpinUs = 30;
-
+    constexpr uint32_t timeoutUs = 25'000;
+    constexpr uint32_t yieldIntervalUs = 3'000;
+    (void)code;
     const uint32_t start = CoreUtils::timeUs32Raw();
+    uint32_t nextYieldAt = start + yieldIntervalUs;
 
-    while (gpio_get(busyPin))
+    while (gpio_get(busyPin) != waitFor)
     {
         const uint32_t now = CoreUtils::timeUs32Raw();
 
@@ -36,18 +36,18 @@ uint8_t sx126x_buzy_wait(uint8_t busyPin)
             return 1;
         }
 
-        if (!CoreUtils::isUsReachedRaw(start + activeSpinUs, now))
+        if (!CoreUtils::isUsReachedRaw(nextYieldAt, now))
         {
             __asm volatile("nop");
             continue;
         }
 
+        // Advance before yielding: taskYIELD() can return immediately, so
+        // leaving the deadline in the past would yield on every poll.
+        nextYieldAt = now + yieldIntervalUs;
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
         {
             taskYIELD();
-
-            // Or use vTaskDelay(1) if long BUSY periods are expected.
-            // vTaskDelay(1);
         }
         else
         {
@@ -67,19 +67,33 @@ sx126x_hal_status_t sx126x_hal_write(const void *context, const uint8_t *command
     sx126x_hal_status_t ret = SX126X_HAL_STATUS_OK;
     if (sx126x_buzy_wait(sx1262->busy()))
     {
-        GATAS_WARN("hal write, Wait busy timeout");
+        sx1262->recordHalBusyTimeout();
+        GATAS_WARN("hal write, Wait busy timeout opcode:0x%02x busy:%d", command[0], sx1262->busy());
         ret = SX126X_HAL_STATUS_ERROR;
     }
     else
     {
         spi->cs_select(sx1262->cs());
-        spi_write_blocking(spi->spiNum() ? spi1 : spi0, command, command_length);
-        if (data_length != 0)
+        if (spi_write_blocking(spi->spiNum() ? spi1 : spi0, command, command_length) != command_length)
         {
-            spi_write_blocking(spi->spiNum() ? spi1 : spi0, data, data_length);
+            sx1262->recordHalSpiError();
+            GATAS_WARN("hal write, SPI command error opcode:0x%02x", command[0]);
+            ret = SX126X_HAL_STATUS_ERROR;
+        }
+        else if (data_length != 0 &&
+                 spi_write_blocking(spi->spiNum() ? spi1 : spi0, data, data_length) != data_length)
+        {
+            sx1262->recordHalSpiError();
+            GATAS_WARN("hal write, SPI data error opcode:0x%02x", command[0]);
+            ret = SX126X_HAL_STATUS_ERROR;
         }
     }
     spi->cs_deselect(sx1262->cs());
+
+    // BUSY can assert up to 600 ns after NSS rises. Cover that window before
+    // Delay to wait for a minimal Tsw
+    busy_wait_us_32(1);
+
     return ret;
 }
 
@@ -92,7 +106,8 @@ sx126x_hal_status_t sx126x_hal_read(const void *context, const uint8_t *command,
     sx126x_hal_status_t ret = SX126X_HAL_STATUS_OK;
     if (sx126x_buzy_wait(sx1262->busy()))
     {
-        GATAS_WARN("hal read, Wait busy timeout");
+        sx1262->recordHalBusyTimeout();
+        GATAS_WARN("hal read, Wait busy timeout opcode:0x%02x", command[0]);
         ret = SX126X_HAL_STATUS_ERROR;
     }
     else
@@ -101,7 +116,8 @@ sx126x_hal_status_t sx126x_hal_read(const void *context, const uint8_t *command,
         int length = spi_write_blocking(spi->spiNum() ? spi1 : spi0, command, command_length);
         if (length != command_length)
         {
-            GATAS_WARN("sx126x_hal_read write error");
+            sx1262->recordHalSpiError();
+            GATAS_WARN("hal read, SPI command error opcode:0x%02x", command[0]);
             ret = SX126X_HAL_STATUS_ERROR;
         }
         else
@@ -109,7 +125,8 @@ sx126x_hal_status_t sx126x_hal_read(const void *context, const uint8_t *command,
             length = spi_read_blocking(spi->spiNum() ? spi1 : spi0, 0, data, data_length);
             if (length != data_length)
             {
-                GATAS_WARN("sx126x_hal_read read error");
+                sx1262->recordHalSpiError();
+                GATAS_WARN("hal read, SPI data error opcode:0x%02x", command[0]);
                 ret = SX126X_HAL_STATUS_ERROR;
             }
         }
