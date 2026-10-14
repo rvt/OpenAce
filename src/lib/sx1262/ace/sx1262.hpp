@@ -265,8 +265,7 @@ public:
     void checkAndClearDeviceErrors();
     void receiveGFSKPacket();
     void receiveLORAPacket();
-    void sendGFSKPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length);
-    void sendLORAPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length);
+Simple sendPacket function    void sendPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length, uint32_t timeoutMs);
     sx126x_irq_mask_t getIrqStatus();
     bool isTxDone();
 

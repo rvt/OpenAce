@@ -457,9 +457,8 @@ void Sx1262::listen()
     sx126x_set_rx(this, SX126X_MAX_TIMEOUT_IN_MS);
 }
 
-void Sx1262::sendGFSKPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length)
+void Sx1262::sendPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length, uint32_t timeoutMs)
 {
-    (void)parameters;
     disablePinInterrupt(dio1Pin);
     sx126x_clear_irq_status(this, SX126X_IRQ_ALL);
     sx126x_set_dio_irq_params(this, SX126X_IRQ_TX_DONE | SX126X_IRQ_TIMEOUT, SX126X_IRQ_TX_DONE | SX126X_IRQ_TIMEOUT, SX126X_IRQ_NONE, SX126X_IRQ_NONE);
@@ -470,25 +469,7 @@ void Sx1262::sendGFSKPacket(const GATAS::RadioParameters &parameters, const uint
     sx126x_set_tx_params(this, powerdBm, SX126X_RAMP_200_US);
     sx126x_write_buffer(this, 0x00, data, length);
     // 13.1.14 SetTx
-    sx126x_set_tx(this, 12); // 10ms for largest timeout GFSK packages
-}
-
-void Sx1262::sendLORAPacket(const GATAS::RadioParameters &parameters, const uint8_t *data, uint8_t length)
-{
-    int8_t powerdBm = LOW_POWER_MODE ? LOW_POWER_DBM : etl::min(static_cast<int8_t>(22), parameters.frequency->powerdBm);
-    sx126x_set_tx_params(this, powerdBm, SX126X_RAMP_200_US);
-
-    disablePinInterrupt(dio1Pin);
-    sx126x_clear_irq_status(this, SX126X_IRQ_ALL);
-    // Wait until CAD done
-    // disablePinInterrupt(dio1Pin); // We are just waiting for CAD
-    // Might be here a solution?? https://github.com/antirez/freakwan/tree/main/techo-port
-    sx126x_set_dio_irq_params(this, SX126X_IRQ_TX_DONE | SX126X_IRQ_TIMEOUT, SX126X_IRQ_TX_DONE | SX126X_IRQ_TIMEOUT, SX126X_IRQ_NONE, SX126X_IRQ_NONE);
-    enablePinInterrupt(dio1Pin, DIO1_EVENT);
-
-    // 13.1.14 SetTx
-    sx126x_write_buffer(this, 0x00, data, length);
-    sx126x_set_tx(this, 65); // 55ms for largest timeout GFSK packages
+    sx126x_set_tx(this, timeoutMs);
 }
 
 void Sx1262::receiveGFSKPacket()
@@ -697,19 +678,19 @@ sx126x_status_t Sx1262::sendPacket(const TxPacket &txPacket)
             }
             uint8_t manchesterFrame[GATAS::RADIO_MAX_TX_GFSK_FRAME_LENGTH * MANCHESTER];
             manchesterEncode(manchesterFrame, txPacket.frame.get(), txPacket.length);
-            sendGFSKPacket(txPacket.radioParameters, manchesterFrame, txPacket.length * MANCHESTER);
+            sendPacket(txPacket.radioParameters, manchesterFrame, txPacket.length * MANCHESTER, 12);
             return SX126X_STATUS_OK;
         }
         else
         {
-            sendGFSKPacket(txPacket.radioParameters, txPacket.frame.get(), txPacket.length);
+            sendPacket(txPacket.radioParameters, txPacket.frame.get(), txPacket.length, 12);
             return SX126X_STATUS_OK;
         }
     }
     else if (txPacket.radioParameters.frequency->mode == GATAS::Modulation::LORA)
     {
         GATAS_MEASURE("sendLORAPacket", 100);
-        sendLORAPacket(txPacket.radioParameters, txPacket.frame.get(), txPacket.length);
+        sendPacket(txPacket.radioParameters, txPacket.frame.get(), txPacket.length, 65);
         return SX126X_STATUS_OK;
     }
     return SX126X_STATUS_UNKNOWN_VALUE;
