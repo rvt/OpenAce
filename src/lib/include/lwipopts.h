@@ -15,9 +15,13 @@
 #if defined(PICO_RP2350)
 #define MEMP_NUM_UDP_PCB            16
 #define MEMP_NUM_TCP_PCB            12
+// PBUF_POOL_SIZE Increased from 24 15 Oct 2026
+#define PBUF_POOL_SIZE              24
 #else
 #define MEMP_NUM_UDP_PCB            12
 #define MEMP_NUM_TCP_PCB            8
+// PBUF_POOL_SIZE Increased from 16 15 Oct 2026
+#define PBUF_POOL_SIZE              20
 #endif
 
 // Keep MEMP_MEM_MALLOC low , since LWiP should use the POOL only
@@ -28,7 +32,7 @@
 #define MEMP_USE_CUSTOM_POOLS       1
 #define MEM_USE_POOLS_TRY_BIGGER_POOL  0
 // CHanging to 1460 take an additional 14784 bytes
-#define TCP_MSS                     536 
+#define TCP_MSS                     536
 #define TCP_WND                     (4 * TCP_MSS)
 #define TCP_SND_BUF                 (2 * TCP_MSS)
 #define TCP_SND_QUEUELEN            ((4 * (TCP_SND_BUF) + (TCP_MSS - 1)) / (TCP_MSS))

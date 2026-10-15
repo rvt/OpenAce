@@ -42,7 +42,7 @@ void GatasConnectUDP::getData(etl::string_stream &stream, const etl::string_view
     stream << ",\"bytesSend:kb\":" << statistics.bytesSend;
     stream << ",\"pkgReceived:k\":" << statistics.pkgReceived;
     stream << ",\"pkgSend:k\":" << statistics.pkgSend;
-    stream << ",\"bufferAlloc:err\":" << statistics.bufferAllocErr;
+    stream << ",\"pBufferAlloc:err\":" << statistics.pBufferAllocErr;
     stream << ",\"msgSendFailed:err\":" << statistics.msgSendFailed;
     stream << ",\"hasConnection:b\":" << statistics.hasConnection;
     stream << "}";
@@ -138,7 +138,7 @@ void GatasConnectUDP::on_receive(const GATAS::GatasConnectTx &msg)
     struct pbuf *pbuf = pbuf_alloc(PBUF_TRANSPORT, sendLength, PBUF_POOL);
     if (pbuf == nullptr)
     {
-        statistics.bufferAllocErr++;
+        statistics.pBufferAllocErr++;
         return;
     }
 
@@ -180,7 +180,7 @@ void GatasConnectUDP::receiveUdpMessage(void *arg, struct udp_pcb *pcb,
     auto *copy = static_cast<uint8_t *>(BaseModule::getGlobalPool().alloc(pbuf->tot_len));
     if (copy == nullptr)
     {
-        taskCtx->statistics.bufferAllocErr += 1;
+        taskCtx->statistics.pBufferAllocErr += 1;
         return;
     }
 
