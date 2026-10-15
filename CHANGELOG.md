@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]
 
-## [v3.5.0] - 2026-10-14
-
 ### Added
 
 -
@@ -27,7 +25,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- 
+-
+
+### Security
+
+-
+
+## [v3.5.1] - 2026-10-15
+
+### Added
+
+-
+
+### Changed
+
+- Changed pBuffers size to 20
+- Changed PoolAllocator to 610
+
+### Deprecated
+
+-
+
+### Removed
+
+-
+
+### Fixed
+
+-
 
 ### Security
 
@@ -75,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the full-width receive timestamp.
 - Fixed GPS RMC/local-time diagnostics so millisecond-level second-boundary and normal
   sentence transport delays do not produce false warnings.
-- Imporved sx1262 robustness while changing radio modulations and syncwords  
+- Imporved sx1262 robustness while changing radio modulations and syncwords
 
 ### Security
 

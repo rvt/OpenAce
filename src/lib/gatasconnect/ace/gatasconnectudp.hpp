@@ -36,7 +36,7 @@ class GatasConnectUDP : public BaseModule, public etl::message_router<GatasConne
         uint32_t bytesSend = 0;
         uint32_t pkgReceived = 0;
         uint32_t pkgSend = 0;
-        uint32_t bufferAllocErr = 0;
+        uint32_t pBufferAllocErr = 0;
         uint32_t msgSendFailed = 0;
         bool hasConnection = false;
     } statistics;
