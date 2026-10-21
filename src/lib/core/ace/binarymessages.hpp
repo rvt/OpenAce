@@ -12,6 +12,7 @@
 #include "ace/cobs.hpp"
 #include "lib_crc.hpp"
 #include "coreutils.hpp"
+#include "deviceactions.hpp"
 #include "models.hpp"
 #include "ace/measure.hpp"
 
@@ -20,6 +21,9 @@ class BinaryMessages
 public:
     // Upper bound for one framed COBS payload including the trailing zero delimiter.
     static constexpr size_t MAX_COBS_FRAME_SIZE = 256;
+
+    static constexpr size_t DEVICE_ACTION_REQUEST_SIZE_V1 = 16;
+    static constexpr size_t DEVICE_ACTION_RESPONSE_SIZE_V1 = 17;
 
     /**
      * Object that can be used by binary messages to indicate how many bytes it will consume
@@ -624,5 +628,44 @@ public:
         }
 
         return crc16;
+    }
+
+    static etl::optional<GATAS::DeviceActionRequest> deserializeDeviceActionRequestV1(const etl::span<const uint8_t> &raw)
+    {
+        if (raw.size() != DEVICE_ACTION_REQUEST_SIZE_V1 ||
+            raw[0] != DataType(DataType::DEVICE_ACTION_REQUEST_V1).get_value())
+        {
+            return etl::nullopt;
+        }
+
+        etl::bit_stream_reader reader(raw, etl::endian::big);
+        reader.read_unchecked<uint8_t>();
+        GATAS::DeviceActionRequest request;
+        request.action = static_cast<GATAS::DeviceAction>(reader.read_unchecked<uint8_t>());
+        request.phase = static_cast<GATAS::DeviceActionPhase>(reader.read_unchecked<uint8_t>());
+        request.requestId = reader.read_unchecked<uint32_t>();
+        request.bootId = reader.read_unchecked<uint64_t>();
+        request.updatePolicy = static_cast<GATAS::DeviceUpdatePolicy>(reader.read_unchecked<uint8_t>());
+        return request;
+    }
+
+    static size_t serializeDeviceActionResponseV1(const GATAS::DeviceActionResponse &response, uint8_t *out, size_t outSize)
+    {
+        const size_t framedSize = getCOBSBufferSize(DEVICE_ACTION_RESPONSE_SIZE_V1, true);
+        if (outSize < framedSize)
+        {
+            return 0;
+        }
+
+        uint8_t rawBuffer[DEVICE_ACTION_RESPONSE_SIZE_V1];
+        etl::bit_stream_writer writer(rawBuffer, sizeof(rawBuffer), etl::endian::big);
+        writer.write_unchecked<uint8_t>(DataType(DataType::DEVICE_ACTION_RESPONSE_V1).get_value());
+        writer.write_unchecked<uint8_t>(static_cast<uint8_t>(response.action));
+        writer.write_unchecked<uint32_t>(response.requestId);
+        writer.write_unchecked<uint8_t>(static_cast<uint8_t>(response.result));
+        writer.write_unchecked<uint8_t>(response.capabilities);
+        writer.write_unchecked<uint64_t>(response.bootId);
+        writer.write_unchecked<uint8_t>(response.dirty ? 1 : 0);
+        return encodeCOBS(rawBuffer, sizeof(rawBuffer), out, outSize, true);
     }
 };

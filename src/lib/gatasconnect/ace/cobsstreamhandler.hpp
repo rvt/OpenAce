@@ -1,7 +1,6 @@
 #pragma once
 #include <cstddef>
 #include "ace/cobs.hpp"
-#include "ace/deviceactioncodec.hpp"
 #include "ace/debug.hpp"
 #include "ace/gulp.hpp"
 #include "ace/binarymessages.hpp"
@@ -72,20 +71,20 @@ public:
             uint8_t frameType = data[0];
             etl::bit_stream_reader reader(data, etl::endian::big);
 
-            if (frameType == GATAS::DeviceActionCodec::REQUEST)
+            if (frameType == BinaryMessages::DataType::DEVICE_ACTION_REQUEST_V1)
             {
                 // Management is BLE-only and deliberately bypasses the legacy
                 // aircraft/configuration holdback during connection startup.
                 if (bleSession != 0)
                 {
-                    if (const auto request = GATAS::DeviceActionCodec::decode(data))
+                    if (const auto request = BinaryMessages::deserializeDeviceActionRequestV1(data))
                     {
                         bus.receive(GATAS::DeviceActionRequestMsg{request.value(), bleSession});
                     }
                 }
                 continue;
             }
-            if (frameType == GATAS::DeviceActionCodec::RESPONSE || !allowLegacy)
+            if (frameType == BinaryMessages::DataType::DEVICE_ACTION_RESPONSE_V1 || !allowLegacy)
             {
                 continue;
             }

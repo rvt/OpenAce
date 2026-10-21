@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring>
-#include "ace/deviceactioncodec.hpp"
+#include "ace/binarymessages.hpp"
 #include "../../gatasconnect/ace/cobsstreamhandler.hpp"
 
 using namespace GATAS;
@@ -8,16 +8,16 @@ using namespace GATAS;
 TEST_CASE("Device action wire vectors match Companion", "[device-actions]")
 {
     const uint8_t raw[] = {12, 1, 0, 0x12, 0x34, 0x56, 0x78, 1, 2, 3, 4, 5, 6, 7, 8, 0};
-    const auto request = DeviceActionCodec::decode(raw);
+    const auto request = BinaryMessages::deserializeDeviceActionRequestV1(raw);
     REQUIRE(request);
     REQUIRE(request->requestId == 0x12345678);
     REQUIRE(request->bootId == 0x0102030405060708ULL);
     REQUIRE(request->action == DeviceAction::Save);
-    REQUIRE_FALSE(DeviceActionCodec::decode(etl::span<const uint8_t>(raw, 15)));
+    REQUIRE_FALSE(BinaryMessages::deserializeDeviceActionRequestV1(etl::span<const uint8_t>(raw, 15)));
     const uint8_t expected[] = {13, 1, 0x12, 0x34, 0x56, 0x78, 0, 7, 1, 2, 3, 4, 5, 6, 7, 8, 1};
     uint8_t framed[32];
     uint8_t decoded[32];
-    const auto written = DeviceActionCodec::encode({DeviceAction::Save, 0x12345678, DeviceActionResult::Ok, 7, 0x0102030405060708ULL, true}, framed, sizeof(framed));
+    const auto written = BinaryMessages::serializeDeviceActionResponseV1({DeviceAction::Save, 0x12345678, DeviceActionResult::Ok, 7, 0x0102030405060708ULL, true}, framed, sizeof(framed));
     REQUIRE(decodeCOBS(framed, written, decoded, sizeof(decoded)) == sizeof(expected));
     REQUIRE(std::memcmp(expected, decoded, sizeof(expected)) == 0);
 }

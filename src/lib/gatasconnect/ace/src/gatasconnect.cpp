@@ -100,14 +100,14 @@ void GatasConnect::on_receive(const GATAS::GatasConnectRx &msg)
 
 void GatasConnect::on_receive(const GATAS::DeviceActionResponseMsg &msg)
 {
-    const auto capacity = getCOBSBufferSize(GATAS::DeviceActionCodec::RESPONSE_SIZE, true);
+    const auto capacity = getCOBSBufferSize(BinaryMessages::DEVICE_ACTION_RESPONSE_SIZE_V1, true);
     auto &pool = BaseModule::getGlobalPool();
     auto *payload = static_cast<uint8_t *>(pool.alloc(capacity));
     if (payload == nullptr)
     {
         return;
     }
-    const auto written = GATAS::DeviceActionCodec::encode(msg.response, payload, capacity);
+    const auto written = BinaryMessages::serializeDeviceActionResponseV1(msg.response, payload, capacity);
     if (written == 0)
     {
         pool.release(payload);
